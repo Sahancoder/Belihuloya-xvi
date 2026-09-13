@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  
+      <circle cx="100" cy="100" r="95" fill="#FFFFFF" stroke="#065F46" stroke-width="6"/>
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#D97706" stroke-width="3"/>
+      <!-- Arch & Book -->
+      <path d="M70,120 L70,80 C70,55 100,42 100,42 C100,42 130,55 130,80 L130,120 Z" fill="none" stroke="#065F46" stroke-width="6"/>
+      <path d="M78,95 Q100,90 100,105 Q100,90 122,95 L122,118 Q100,112 100,125 Q100,112 78,118 Z" fill="#059669"/>
+      <circle cx="100" cy="65" r="7" fill="#D97706"/>
+      <text x="100" y="152" font-family="'Inter', sans-serif" font-weight="900" font-size="10.5" fill="#065F46" text-anchor="middle" letter-spacing="1">SOUTH EASTERN UNIV.</text>
+    
+</svg>

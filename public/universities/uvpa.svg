@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  
+      <circle cx="100" cy="100" r="95" fill="#FFFFFF" stroke="#831843" stroke-width="6"/>
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#F59E0B" stroke-width="3"/>
+      <!-- Ves Thattuwa Crown & Geta Beraya Drum -->
+      <polygon points="100,45 116,72 100,67 84,72" fill="#F59E0B"/>
+      <path d="M70,82 C85,75 115,75 130,82 C120,92 80,92 70,82 Z" fill="#831843"/>
+      <ellipse cx="78" cy="110" rx="8" ry="11" fill="#F59E0B"/>
+      <ellipse cx="122" cy="110" rx="8" ry="11" fill="#F59E0B"/>
+      <path d="M78,99 Q100,93 122,99 L122,121 Q100,127 78,121 Z" fill="#831843" stroke="#F59E0B" stroke-width="2.5"/>
+      <text x="100" y="152" font-family="'Inter', sans-serif" font-weight="900" font-size="10" fill="#831843" text-anchor="middle" letter-spacing="1">VISUAL & PERFORMING</text>
+    
+</svg>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  
+      <circle cx="100" cy="100" r="95" fill="#FFFFFF" stroke="#003366" stroke-width="6"/>
+      <circle cx="100" cy="100" r="80" fill="none" stroke="#DAA520" stroke-width="3"/>
+      <!-- Stupa / Dagoba & Traditional Sun Motif -->
+      <path d="M100,35 L100,50 M100,50 C80,65 72,85 72,115 L128,115 C128,85 120,65 100,50 Z" fill="#003366"/>
+      <circle cx="100" cy="35" r="4" fill="#DAA520"/>
+      <rect x="68" y="115" width="64" height="12" rx="4" fill="#DAA520"/>
+      <!-- University Name Arced -->
+      <text x="100" y="152" font-family="'Inter', sans-serif" font-weight="900" font-size="12" fill="#003366" text-anchor="middle" letter-spacing="1">UNIVERSITY OF RUHUNA</text>
+    
+</svg>

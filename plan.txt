@@ -1,0 +1,1662 @@
+ඔයා කියන requirement එක අනුව මේ project එක **single-laptop, no-backend, OBS + Facebook Live optimized scoreboard control system** එකක්. Admin controls audience එකට නොපෙනෙනවා; OBS overlay එක real-time update වෙනවා; university logos locally load වෙනවා; interval music OBS scenes හරහා control වෙනවා.
+
+“No errors” කියලා 100% guarantee කරන්න බැහැ, නමුත් architecture, validation, undo, persistence, testing, recovery flow දාලා **live event එකේ error chance එක අවම කරන විදිහට** plan කරන්න පුළුවන්.
+
+පහළ තියෙන්නේ ඔයාට Cursor / Claude Code / Codex / Copilot වගේ coding assistant එකකට paste කරන්න පුළුවන් **complete master prompt** එක.
+
+---
+
+# MASTER DEVELOPMENT PROMPT
+
+```text
+You are a senior frontend engineer, broadcast graphics engineer, OBS workflow designer,
+and QA engineer.
+
+I need you to design and build a production-quality LOCAL LIVE SCOREBOARD SYSTEM
+for the "BELIHULOYA XVI Sabra Elle Championship".
+
+This system will mainly be used for Facebook Live through OBS Studio.
+
+IMPORTANT:
+This is a SINGLE-LAPTOP system.
+
+DO NOT build:
+- a cloud backend
+- an API server
+- authentication server
+- database server
+- Socket.IO server
+- mobile operator app
+- remote control system
+
+The scoreboard, admin panel, OBS overlay, assets and persistence must work locally
+on one Windows laptop.
+
+The system must remain usable even if the internet connection disappears.
+Only Facebook Live itself depends on internet.
+
+==================================================
+1. MAIN TECHNOLOGY STACK
+==================================================
+
+Use:
+
+Frontend:
+- React
+- TypeScript
+- Vite
+
+Styling:
+- Tailwind CSS
+
+State:
+- Zustand preferred
+or another lightweight maintainable React state solution
+
+Realtime communication between local browser contexts:
+- BroadcastChannel API
+
+Persistence:
+- localStorage
+
+OBS integration:
+- OBS Browser Source
+- OBS Custom Browser Dock
+
+Local serving:
+- Vite development server during development
+- Vite preview or another simple STATIC local server for tournament use
+
+Do NOT create a backend.
+
+Recommended final local URLs:
+
+http://127.0.0.1:4173/admin
+http://127.0.0.1:4173/overlay
+
+Both Admin and Overlay must use the SAME origin.
+
+Do not mix file:// URLs and HTTP URLs.
+
+==================================================
+2. SYSTEM PURPOSE
+==================================================
+
+There are TWO primary interfaces.
+
+A. ADMIN CONTROL CENTER
+
+Route:
+
+/admin
+
+This is private and only visible to the scoreboard maintainer/operator.
+
+The audience must NEVER see admin controls.
+
+B. LIVE BROADCAST OVERLAY
+
+Route:
+
+/overlay
+
+This page is loaded into OBS Studio as a Browser Source.
+
+It must:
+- have a transparent background
+- contain no controls
+- contain no forms
+- contain no buttons
+- contain no navigation
+- only display tournament and match information
+
+The OBS output combines:
+
+CAMERA
++
+LIVE SCOREBOARD OVERLAY
++
+AUDIO / MUSIC
+=
+FACEBOOK LIVE OUTPUT
+
+==================================================
+3. LIVE OVERLAY DESIGN
+==================================================
+
+Target resolution:
+
+1920 x 1080
+
+Design it specifically for an OBS 1920x1080 canvas.
+
+Do NOT place a participating-universities information card on the left side.
+
+The camera area must remain as unobstructed as possible.
+
+Overlay structure:
+
+TOP LEFT:
+- LIVE badge
+- BELIHULOYA XVI
+- Belihuloya, Sri Lanka
+
+TOP RIGHT:
+- BELIHULOYA XVI tournament/event logo
+
+BOTTOM SCOREBOARD:
+- Team A official university logo
+- Team A short code
+- Team A full university name
+
+CENTER:
+- RUNS
+- BALLS
+- OUTS
+
+Then:
+
+- Team B short code
+- Team B full university name
+- Team B official logo
+
+BOTTOM BRAND BAR:
+BELIHULOYA XVI SABRA ELLE CHAMPIONSHIP
+
+Optional right-side slogan:
+MORE THAN A GAME
+
+Visual style:
+
+- dark navy base
+- cyan accent/glow
+- green accent
+- yellow accent
+- subtle red only where appropriate
+- white readable typography
+- professional sports broadcast appearance
+- high contrast
+- readable on mobile Facebook viewers
+- clean
+- not overcrowded
+
+Avoid:
+- excessive gradients
+- excessive glow
+- excessive red
+- very small text
+- distracting animation
+- large panels blocking the players/camera
+- low contrast elements
+
+==================================================
+4. RESPONSIVE BROADCAST DESIGN
+==================================================
+
+The overlay is designed primarily for:
+
+1920x1080 OBS canvas.
+
+However, Facebook viewers may watch on:
+- desktop
+- laptop
+- tablet
+- mobile
+
+Therefore:
+
+- scores must be large
+- team codes must be clearly readable
+- important information must remain inside broadcast safe areas
+- don't place important text too close to screen edges
+- avoid tiny university names
+- ensure readability after Facebook video compression
+
+==================================================
+5. ADMIN CONTROL CENTER DESIGN
+==================================================
+
+Create a professional operator dashboard.
+
+Recommended layout:
+
+LEFT/CENTER:
+control sections
+
+RIGHT:
+live overlay preview
+
+Top header:
+
+BELIHULOYA XVI
+LIVE SCORE CONTROL
+
+Status indicator:
+
+READY
+LIVE
+INTERVAL
+FINISHED
+
+Admin must include the following sections.
+
+==================================================
+6. MATCH SETUP
+==================================================
+
+Controls:
+
+Team A
+[University dropdown]
+
+Team B
+[University dropdown]
+
+When a university is selected automatically load:
+
+- university short code
+- university full name
+- university logo
+- primary accent color if available
+- secondary accent color if available
+
+Prevent selecting the same university as both Team A and Team B.
+
+Show logo preview before starting the match.
+
+Provide:
+
+START MATCH
+
+button.
+
+Before match start show a confirmation summary:
+
+Team A
+Team B
+Logos
+Initial score
+Current batting team
+
+==================================================
+7. UNIVERSITY LIBRARY
+==================================================
+
+The system must support these universities initially:
+
+SUSL
+Sabaragamuwa University of Sri Lanka
+
+UOC
+University of Colombo
+
+UOP
+University of Peradeniya
+
+USJ
+University of Sri Jayewardenepura
+
+UOK
+University of Kelaniya
+
+UOM
+University of Moratuwa
+
+UOJ
+University of Jaffna
+
+UOR
+University of Ruhuna
+
+EUSL
+Eastern University, Sri Lanka
+
+SEUSL
+South Eastern University of Sri Lanka
+
+RUSL
+Rajarata University of Sri Lanka
+
+WUSL
+Wayamba University of Sri Lanka
+
+UWU
+Uva Wellassa University
+
+OUSL
+The Open University of Sri Lanka
+
+UVPA
+University of the Visual and Performing Arts
+
+Use ORIGINAL / OFFICIAL university logos.
+
+When obtaining logos:
+- prefer official university websites
+- prefer official SVG assets
+- otherwise use high-resolution transparent PNG
+- do not redraw logos
+- do not alter logo proportions
+- do not recolor official marks unless official brand rules allow it
+
+Store all logos LOCALLY in the project.
+
+Example:
+
+public/
+  universities/
+    susl.svg
+    uoc.svg
+    uop.svg
+    usj.svg
+    uok.svg
+    uom.svg
+    uoj.svg
+    uor.svg
+    eusl.svg
+    seusl.svg
+    rusl.svg
+    wusl.svg
+    uwu.svg
+    ousl.svg
+    uvpa.svg
+
+Do not load logo files from the internet during the match.
+
+Create:
+
+src/data/universities.ts
+
+Each university should have a typed record:
+
+id
+code
+name
+logoPath
+primaryColor
+secondaryColor
+
+==================================================
+8. SCORE CONTROL
+==================================================
+
+The admin must prominently display:
+
+RUNS
+BALLS
+OUTS
+
+Provide RUN controls:
+
+-1
++1
++2
++3
++4
++5
+
+Provide BALL controls:
+
+-1
++1
+
+Provide OUT controls:
+
+-1
++1
+
+Never allow:
+
+runs < 0
+balls < 0
+outs < 0
+
+Use configurable maximum outs if necessary.
+
+Also provide manual editing for emergency correction.
+
+Manual editing must require confirmation if the difference is large.
+
+Example:
+
+Current runs: 8
+Manual value entered: 35
+
+Show confirmation:
+
+"Change runs from 8 to 35?"
+
+==================================================
+9. CURRENT BATTING TEAM
+==================================================
+
+Admin must clearly show:
+
+CURRENT BATTING TEAM
+
+Options:
+
+Team A
+Team B
+
+The overlay must visually indicate the current batting team.
+
+Use subtle styling:
+- brighter border
+- accent line
+- small batting indicator
+
+Do not use distracting animations.
+
+==================================================
+10. INNINGS CONTROL
+==================================================
+
+Provide:
+
+SWITCH BATTING TEAM
+
+and:
+
+END INNINGS
+
+When END INNINGS is clicked:
+
+show confirmation dialog.
+
+Display:
+
+Current Team
+Runs
+Balls
+Outs
+
+Options:
+
+CANCEL
+CONFIRM END INNINGS
+
+On confirmation:
+
+- preserve previous innings score
+- change batting team
+- reset active score where applicable
+- update overlay immediately
+
+Do not allow accidental one-click innings reset.
+
+==================================================
+11. MATCH STATUS
+==================================================
+
+Statuses:
+
+READY
+LIVE
+INTERVAL
+FINISHED
+
+Admin should be able to update status.
+
+Overlay behavior:
+
+READY:
+show tournament branding
+
+LIVE:
+show LIVE badge
+
+INTERVAL:
+score may remain visible depending on configuration
+
+FINISHED:
+show final score state
+
+==================================================
+12. UNDO SYSTEM
+==================================================
+
+Undo is extremely important.
+
+Every scoring action must create a history entry.
+
+Example:
+
+RUN_ADD +1
+BALL_ADD +1
+RUN_ADD +4
+OUT_ADD +1
+
+Keep at least the most recent 50 actions.
+
+UNDO must restore the exact previous state.
+
+Display in admin:
+
+RECENT ACTIONS
+
+Example:
+
++1 Run
++1 Ball
++4 Runs
++1 Out
+
+Provide:
+
+UNDO LAST ACTION
+
+Do not implement Undo by guessing values.
+
+Store previous snapshots or reversible events.
+
+==================================================
+13. RESET SAFETY
+==================================================
+
+Provide:
+
+RESET SCORE
+RESET INNINGS
+RESET MATCH
+
+But these actions must NEVER happen immediately.
+
+Use confirmation dialogs.
+
+For RESET MATCH require stronger confirmation.
+
+Example:
+
+RESET ENTIRE MATCH?
+
+This will clear:
+- teams
+- scores
+- balls
+- outs
+- innings
+- history
+
+Buttons:
+
+CANCEL
+RESET MATCH
+
+Consider requiring a second confirmation or typing RESET.
+
+==================================================
+14. KEYBOARD SHORTCUTS
+==================================================
+
+Implement shortcuts for fast operation.
+
+Recommended:
+
+1 = +1 Run
+2 = +2 Runs
+3 = +3 Runs
+4 = +4 Runs
+5 = +5 Runs
+
+B = +1 Ball
+
+O = +1 Out
+
+U = Undo
+
+Keyboard shortcuts must NOT trigger when the user is typing into an input field.
+
+Dangerous actions must NOT have simple keyboard shortcuts:
+
+- Reset Match
+- End Match
+- End Innings
+
+Show a shortcut reference in the admin interface.
+
+==================================================
+15. REAL-TIME SYNCHRONIZATION
+==================================================
+
+Use:
+
+BroadcastChannel API
+
+Create a channel such as:
+
+belihuloya-scoreboard
+
+When admin changes state:
+
+Admin
+→ update Zustand/store
+→ save state to localStorage
+→ broadcast full authoritative match state
+→ Overlay receives state
+→ Overlay renders immediately
+
+The overlay must not maintain separate scoring logic.
+
+Admin is the source of truth.
+
+Broadcast a complete state snapshot rather than many unrelated messages.
+
+Example event:
+
+{
+  type: "MATCH_STATE_UPDATED",
+  payload: {
+    teamA: ...,
+    teamB: ...,
+    battingTeam: ...,
+    runs: 8,
+    balls: 20,
+    outs: 1,
+    status: "LIVE"
+  }
+}
+
+==================================================
+16. STATE PERSISTENCE
+==================================================
+
+Every meaningful state change must immediately save to localStorage.
+
+Persist:
+
+selected teams
+runs
+balls
+outs
+batting team
+innings
+status
+history
+configuration
+
+If:
+- page refreshes
+- OBS restarts
+- browser source reloads
+- admin dock reloads
+
+the score must restore automatically.
+
+Do NOT reset to zero unless operator explicitly resets it.
+
+Display in admin:
+
+AUTO SAVE: ACTIVE
+
+Last Saved:
+HH:MM:SS
+
+==================================================
+17. OVERLAY STARTUP LOGIC
+==================================================
+
+When /overlay opens:
+
+1. Load last saved match state.
+2. Render it immediately.
+3. Subscribe to BroadcastChannel.
+4. Listen for future updates.
+5. Animate changed values subtly.
+
+If BroadcastChannel temporarily fails:
+- continue showing last known state
+- do not blank the overlay
+- automatically resume when updates arrive
+
+==================================================
+18. LIVE PREVIEW
+==================================================
+
+Inside admin provide a scaled preview of the overlay.
+
+It should use the SAME display components/data as the production overlay.
+
+Do not create a completely separate implementation.
+
+This ensures:
+
+ADMIN PREVIEW
+=
+OBS OUTPUT
+
+as closely as possible.
+
+==================================================
+19. SCORE ANIMATIONS
+==================================================
+
+Use subtle professional animations.
+
+Score change:
+
+08 → 09
+
+Animation:
+approximately 200–300ms
+
+Possible effect:
+- slight scale
+- small opacity transition
+- subtle cyan flash
+
+Out change:
+small red accent flash
+
+Ball change:
+small cyan/green flash
+
+Avoid:
+- bouncing
+- spinning
+- large zooms
+- long animations
+
+Broadcast information must remain readable.
+
+==================================================
+20. CODE STRUCTURE
+==================================================
+
+Use a maintainable modular structure.
+
+Recommended:
+
+belihuloya-scoreboard/
+│
+├── public/
+│   ├── universities/
+│   └── tournament/
+│
+├── src/
+│   ├── app/
+│   │   ├── App.tsx
+│   │   └── router.tsx
+│   │
+│   ├── pages/
+│   │   ├── AdminPage.tsx
+│   │   └── OverlayPage.tsx
+│   │
+│   ├── components/
+│   │   ├── admin/
+│   │   │   ├── MatchSetup.tsx
+│   │   │   ├── TeamSelector.tsx
+│   │   │   ├── ScoreControls.tsx
+│   │   │   ├── RunsControls.tsx
+│   │   │   ├── BallsControls.tsx
+│   │   │   ├── OutsControls.tsx
+│   │   │   ├── InningsControls.tsx
+│   │   │   ├── MatchActions.tsx
+│   │   │   ├── RecentActions.tsx
+│   │   │   └── LivePreview.tsx
+│   │   │
+│   │   ├── overlay/
+│   │   │   ├── LiveBadge.tsx
+│   │   │   ├── TournamentLogo.tsx
+│   │   │   ├── TeamDisplay.tsx
+│   │   │   ├── ScoreDisplay.tsx
+│   │   │   ├── ScoreValue.tsx
+│   │   │   └── TournamentBar.tsx
+│   │   │
+│   │   └── common/
+│   │
+│   ├── data/
+│   │   └── universities.ts
+│   │
+│   ├── store/
+│   │   └── matchStore.ts
+│   │
+│   ├── services/
+│   │   ├── persistence.ts
+│   │   └── realtime.ts
+│   │
+│   ├── hooks/
+│   │   ├── useKeyboardShortcuts.ts
+│   │   └── useRealtimeScore.ts
+│   │
+│   ├── types/
+│   │   ├── match.ts
+│   │   └── university.ts
+│   │
+│   └── utils/
+│
+├── package.json
+└── README.md
+
+Do not create huge components.
+
+Keep:
+UI
+state
+storage
+business logic
+realtime logic
+
+separated.
+
+==================================================
+21. TYPESCRIPT QUALITY
+==================================================
+
+Use strict TypeScript.
+
+Avoid:
+
+any
+
+unless absolutely unavoidable.
+
+Create explicit types:
+
+University
+MatchState
+ScoreState
+ScoreAction
+MatchStatus
+InningsState
+
+Enable strict compiler configuration.
+
+No TypeScript errors should remain.
+
+==================================================
+22. OBS INTEGRATION
+==================================================
+
+The project is intended for OBS Studio.
+
+FINAL WORKFLOW:
+
+OBS contains:
+
+CAMERA
++
+BROWSER SCOREBOARD OVERLAY
++
+AUDIO
++
+SCENES
+
+Add /overlay as an OBS Browser Source.
+
+URL:
+
+http://127.0.0.1:4173/overlay
+
+Browser source:
+
+Width: 1920
+Height: 1080
+
+Overlay source must be above camera source.
+
+Example OBS source ordering:
+
+Scoreboard Overlay
+Camera
+
+==================================================
+23. ADMIN INSIDE OBS
+==================================================
+
+Use OBS Custom Browser Dock.
+
+Add:
+
+Dock Name:
+Belihuloya Score Control
+
+URL:
+
+http://127.0.0.1:4173/admin
+
+This means the maintainer can control the scoreboard directly from OBS.
+
+Do not place AdminPage inside the broadcast scene.
+
+It is only an OBS interface dock.
+
+==================================================
+24. OBS SCENES
+==================================================
+
+Create guidance for the following scenes.
+
+SCENE 1:
+STARTING SOON
+
+Contains:
+- tournament background
+- tournament logo
+- "Starting Soon"
+- background music
+
+SCENE 2:
+MATCH LIVE
+
+Contains:
+- camera
+- scoreboard Browser Source
+- microphone/commentary
+- appropriate event branding
+
+SCENE 3:
+INTERVAL
+
+Contains:
+- tournament branding
+- "Match Break"
+- "We'll Be Back Shortly"
+- interval music
+- optional current score
+
+SCENE 4:
+MATCH FINISHED
+
+Contains:
+- final score
+- tournament logo
+- closing message
+- optional closing music
+
+==================================================
+25. INTERVAL MUSIC
+==================================================
+
+Do NOT put music playback logic inside the scoreboard React app.
+
+Music should be handled by OBS.
+
+Create an OBS Media Source called:
+
+Interval Music
+
+Use a LOCAL audio file.
+
+Supported recommended formats:
+
+WAV
+or
+high-quality MP3
+
+Allow OBS looping during interval.
+
+Workflow:
+
+MATCH LIVE
+↓
+switch to INTERVAL scene
+↓
+interval music starts
+↓
+interval finishes
+↓
+switch back to MATCH LIVE
+↓
+music stops
+
+Also support:
+
+Starting Music
+Interval Music
+Closing Music
+
+Use music that the tournament has permission to broadcast.
+
+Do not rely on YouTube/Spotify streaming.
+
+==================================================
+26. OBS AUDIO
+==================================================
+
+Provide setup guidance for:
+
+- commentator microphone
+- camera audio
+- music
+- desktop audio where needed
+
+Prevent duplicate audio.
+
+Music should be lower than commentary when both are used.
+
+Add monitoring instructions where appropriate.
+
+==================================================
+27. FACEBOOK LIVE WORKFLOW
+==================================================
+
+The scoreboard application itself should NOT directly communicate with Facebook.
+
+Workflow:
+
+Scoreboard
+→ OBS
+→ Facebook Live
+
+Facebook Live configuration should happen through OBS.
+
+Document:
+
+1. Open Facebook Live Producer.
+2. Create/select live stream.
+3. Obtain current streaming information/stream key.
+4. Configure OBS Stream settings.
+5. Verify preview.
+6. Start OBS streaming.
+7. Confirm Facebook preview.
+8. Go Live.
+
+Because Facebook Live Producer interfaces can change,
+do not hard-code assumptions that may become outdated.
+
+==================================================
+28. EVENT-DAY SEQUENCE
+==================================================
+
+Create documentation for this exact sequence.
+
+BEFORE EVENT:
+
+1. Connect laptop power.
+2. Disable sleep mode.
+3. Disable automatic updates.
+4. Connect camera.
+5. Connect microphone.
+6. Open scoreboard system.
+7. Open OBS.
+8. Verify camera.
+9. Verify overlay.
+10. Verify teams/logos.
+11. Test score controls.
+12. Test Undo.
+13. Test interval scene.
+14. Test interval music.
+15. Test microphone.
+16. Test internet.
+17. Verify Facebook Live preview.
+18. Start stream only when everything is confirmed.
+
+BEFORE EACH MATCH:
+
+1. Select Team A.
+2. Select Team B.
+3. Verify logos.
+4. Set batting team.
+5. Reset match safely.
+6. Confirm:
+   Runs = 0
+   Balls = 0
+   Outs = 0
+7. Check OBS preview.
+8. Start match.
+9. Set status to LIVE.
+
+DURING MATCH:
+
+Play occurs
+→ operator updates score
+→ admin saves state
+→ overlay updates
+→ OBS displays it
+→ Facebook viewers receive updated picture
+
+INTERVAL:
+
+1. Confirm latest score.
+2. Set status INTERVAL.
+3. Switch OBS to Interval scene.
+4. Play interval music.
+5. Keep score saved.
+6. At restart stop interval music.
+7. Switch to Match Live.
+8. Set status LIVE.
+
+AFTER MATCH:
+
+1. Verify final score.
+2. Set status FINISHED.
+3. Switch to Match Finished scene.
+4. Save final state.
+5. Prepare next match only after confirming current match is complete.
+
+==================================================
+29. ERROR RECOVERY
+==================================================
+
+Design recovery procedures.
+
+CASE:
+Admin accidentally refreshes.
+
+Expected:
+state restores from localStorage.
+
+CASE:
+OBS Browser Source reloads.
+
+Expected:
+overlay reads stored state and continues.
+
+CASE:
+OBS crashes.
+
+Expected:
+after reopening OBS and local scoreboard,
+last saved score is restored.
+
+CASE:
+operator enters wrong score.
+
+Expected:
+use Undo.
+
+CASE:
+internet disconnects.
+
+Expected:
+scoreboard and OBS continue locally.
+Facebook connection may stop/reconnect,
+but score state must remain intact.
+
+CASE:
+logo fails to load.
+
+Expected:
+show safe placeholder but never break entire overlay.
+
+==================================================
+30. VALIDATION
+==================================================
+
+Validate:
+
+- Team A != Team B
+- numeric score inputs
+- no negative values
+- valid match states
+- valid university records
+- valid persisted data
+
+If corrupted localStorage data is detected:
+
+do not crash.
+
+Recover with safe defaults and warn operator.
+
+==================================================
+31. PERFORMANCE
+==================================================
+
+Overlay must be lightweight.
+
+Avoid:
+- heavy libraries
+- huge images
+- unnecessary re-renders
+- expensive animations
+- remote dependencies
+
+Optimize logos and tournament assets.
+
+Avoid loading external web fonts if possible.
+
+Prefer local/system fonts for reliability.
+
+==================================================
+32. ACCESSIBILITY AND OPERATOR UX
+==================================================
+
+Admin buttons should be large.
+
+Important buttons must be easy to identify quickly.
+
+Use clear labels:
+
++1 RUN
++1 BALL
++1 OUT
+UNDO
+
+Avoid tiny icons without text.
+
+Dangerous controls should have visual separation.
+
+Example:
+
+normal score buttons
+then separate danger section:
+
+RESET
+END MATCH
+
+==================================================
+33. TESTING
+==================================================
+
+Create tests for score logic.
+
+Minimum unit tests:
+
++1 run
++4 runs
+-1 run
+run cannot become negative
++1 ball
+ball cannot become negative
++1 out
+out cannot become negative
+Undo
+multiple Undo
+Reset
+Switch team
+End innings
+Persistence restore
+invalid localStorage recovery
+
+Also manually test:
+
+Admin → Overlay realtime update
+
+Refresh admin
+
+Refresh overlay
+
+Restart local server
+
+OBS Browser Source reload
+
+==================================================
+34. QA CHECKLIST
+==================================================
+
+Before declaring the project complete:
+
+Run:
+
+TypeScript typecheck
+
+Lint
+
+Production build
+
+Tests
+
+No console errors.
+
+No missing assets.
+
+No broken logo paths.
+
+No React key warnings.
+
+No unhandled exceptions.
+
+No TypeScript errors.
+
+No build warnings that affect functionality.
+
+==================================================
+35. PRODUCTION BUILD
+==================================================
+
+Provide scripts such as:
+
+npm run dev
+
+npm run build
+
+npm run preview
+
+The tournament operator should ideally run:
+
+npm run build
+
+then:
+
+npm run preview
+
+and access:
+
+http://127.0.0.1:4173/admin
+http://127.0.0.1:4173/overlay
+
+Document all commands.
+
+==================================================
+36. DOCUMENTATION
+==================================================
+
+Create:
+
+README.md
+
+docs/
+  OBS_SETUP.md
+  LIVE_EVENT_CHECKLIST.md
+  TROUBLESHOOTING.md
+  SCOREBOARD_CONTROLS.md
+
+README must explain:
+
+installation
+running locally
+building
+admin route
+overlay route
+OBS configuration
+
+OBS_SETUP must explain:
+
+Camera
+Browser Source
+Custom Browser Dock
+Scene ordering
+1920x1080 configuration
+Audio
+Facebook Live
+
+LIVE_EVENT_CHECKLIST must contain tournament-day sequence.
+
+TROUBLESHOOTING must contain common failures and recovery steps.
+
+==================================================
+37. IMPLEMENTATION ORDER
+==================================================
+
+DO NOT attempt everything at once.
+
+Implement in these phases.
+
+PHASE 1
+Project setup
+
+- React
+- TypeScript
+- Vite
+- Tailwind
+- routing
+- code structure
+
+Verify build.
+
+PHASE 2
+University data and logos
+
+- university model
+- data file
+- logo assets
+- Team selector
+
+Verify every logo.
+
+PHASE 3
+Score state
+
+- Zustand store
+- runs
+- balls
+- outs
+- teams
+- batting team
+- status
+
+Write tests.
+
+PHASE 4
+Persistence
+
+- localStorage
+- safe serialization
+- recovery
+
+Test refresh.
+
+PHASE 5
+Admin panel
+
+Build:
+- Match Setup
+- Score Controls
+- Innings Controls
+- Undo
+- Reset
+- Recent Actions
+- Preview
+
+PHASE 6
+Overlay
+
+Build professional 1920x1080 transparent overlay.
+
+PHASE 7
+Realtime
+
+Implement BroadcastChannel.
+
+Verify:
+
+Admin click
+→ Overlay update instantly
+
+PHASE 8
+Animations
+
+Add subtle broadcast-safe transitions.
+
+PHASE 9
+Keyboard shortcuts
+
+Implement safe keyboard control.
+
+PHASE 10
+OBS integration testing
+
+Verify:
+
+Admin Custom Browser Dock
+
+Overlay Browser Source
+
+PHASE 11
+Interval scene/music documentation
+
+Configure OBS scenes and audio workflow.
+
+PHASE 12
+Full QA
+
+Run every test and event scenario.
+
+==================================================
+38. IMPORTANT ENGINEERING RULES
+==================================================
+
+Do not duplicate scoring logic.
+
+Do not put scoring logic inside React UI components.
+
+Create reusable state actions.
+
+Do not mutate state directly.
+
+Do not rely on internet services.
+
+Do not use remote logos.
+
+Do not use remote APIs.
+
+Do not unnecessarily over-engineer.
+
+Do not introduce a backend unless requirements change.
+
+Do not reset persisted match state on page refresh.
+
+Do not expose Admin UI in the broadcast overlay.
+
+Do not let a broken logo break the overlay.
+
+Do not hide important errors silently.
+
+==================================================
+39. DESIGN GOAL
+==================================================
+
+The system should feel like a real sports broadcast control system.
+
+For the maintainer:
+
+FAST
+CLEAR
+SAFE
+EASY TO OPERATE
+
+For viewers:
+
+CLEAN
+PROFESSIONAL
+EASY TO READ
+NOT DISTRACTING
+
+For development:
+
+MODULAR
+TYPED
+TESTABLE
+MAINTAINABLE
+
+==================================================
+40. FINAL ACCEPTANCE CRITERIA
+==================================================
+
+Do not call the implementation complete until all of these work:
+
+1. Admin can select two universities.
+
+2. Correct official logos appear.
+
+3. Overlay reflects team changes.
+
+4. Runs can be updated.
+
+5. Balls can be updated.
+
+6. Outs can be updated.
+
+7. Undo works correctly.
+
+8. Refresh does not lose score.
+
+9. Overlay updates without manual refresh.
+
+10. Admin remains outside Facebook broadcast.
+
+11. OBS Browser Source shows transparent overlay correctly.
+
+12. Admin works inside OBS Custom Browser Dock.
+
+13. Camera remains clearly visible.
+
+14. Scoreboard remains readable on smaller screens.
+
+15. Interval scene and music workflow is documented.
+
+16. Final match status works.
+
+17. No TypeScript errors.
+
+18. No browser console errors.
+
+19. Production build succeeds.
+
+20. All tests pass.
+
+Work phase by phase.
+
+After each phase:
+- verify it
+- report what was implemented
+- report tests performed
+- report any remaining issue
+
+Do not claim something works unless it has actually been verified.
+
+Start by creating the architecture and implementation plan.
+Do not skip directly into random coding.
+```
+
+## ඔයා project එක actually operate කරන විදිහ
+
+Final live setup එක මෙහෙමයි:
+
+```text
+                    ONE LAPTOP
+
+             ┌─────────────────┐
+Camera ─────►│                 │
+             │                 │
+Overlay ────►│   OBS STUDIO    │────► Facebook Live
+             │                 │
+Music ──────►│                 │
+Mic ────────►│                 │
+             └─────────────────┘
+                     ▲
+                     │
+              Admin Control
+                OBS Dock
+```
+
+Operatorට OBS එකේ එකම screen එකෙන් score control කරන්න පුළුවන්.
+
+Audienceට Admin panel එක **කවදාවත් පේන්නේ නැහැ**.
+
+### Match එක අතරතුර sequence එක
+
+```text
+Player scores
+      ↓
+Operator presses +1
+      ↓
+Admin updates score
+      ↓
+localStorage saves it
+      ↓
+BroadcastChannel sends update
+      ↓
+OBS Overlay changes 08 → 09
+      ↓
+OBS sends updated video frame
+      ↓
+Facebook audience sees 09
+```
+
+Interval එක:
+
+```text
+Match Live
+    ↓
+Interval starts
+    ↓
+Save score
+    ↓
+Status = INTERVAL
+    ↓
+OBS → Interval Scene
+    ↓
+Interval Music starts
+    ↓
+Break finishes
+    ↓
+Music stops
+    ↓
+OBS → Match Live
+    ↓
+Status = LIVE
+```
+
+මෙහෙම build කළාම **scoreboard app එක score ගැන වගකියනවා**, **OBS එක live production ගැන වගකියනවා**, **Facebook එක final video receive කරනවා**. ඒ separation එක maintainability සහ live-event reliability දෙකටම හොඳයි.
