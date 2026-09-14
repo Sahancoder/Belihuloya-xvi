@@ -1,346 +1,248 @@
 import { create } from 'zustand';
-import { MatchState, MatchSnapshot, MatchStatus, BattingTeam, ScoreAction, Innings } from '../types/match';
+import {
+  IntervalSelection,
+  MatchState,
+  MatchStatus,
+  MusicOutput,
+  ScoreAction,
+  ScoreState,
+  TeamSide,
+  WinnerRule,
+} from '../types/match';
 import { University } from '../types/university';
 import {
-  loadFromLocalStorage,
-  saveToLocalStorage,
+  appendToArchive,
   createSnapshot,
+  emptyScore,
   getInitialMatchState,
+  loadFromLocalStorage,
+  newMatchId,
+  saveToLocalStorage,
 } from '../services/persistence';
 import { realtimeService } from '../services/realtime';
+import { getMatchResult } from '../services/result';
+
+const HISTORY_LIMIT = 50;
+
+export const otherSide = (side: TeamSide): TeamSide => (side === 'teamA' ? 'teamB' : 'teamA');
 
 interface MatchStoreActions {
-  // Team actions
-  setTeams: (teamA: University, teamB: University) => void;
-  setBattingTeam: (team: BattingTeam) => void;
+  setTeam: (side: TeamSide, university: University) => boolean;
+  swapTeams: () => void;
+  setBattingTeam: (side: TeamSide) => void;
+  switchBattingTeam: () => void;
   setStatus: (status: MatchStatus) => void;
 
-  // Score adjustments
   addRuns: (amount: number) => void;
-  decrementRuns: () => void;
+  removeRun: () => void;
   addBall: () => void;
-  decrementBall: () => void;
+  removeBall: () => void;
   addOut: () => void;
-  decrementOut: () => void;
-  manualOverrideScore: (runs: number, balls: number, outs: number) => void;
+  removeOut: () => void;
+  manualOverride: (side: TeamSide, score: ScoreState) => void;
 
-  // Innings and flow
-  switchBattingTeam: () => void;
-  endInnings: () => void;
-
-  // History / Undo
+  endTurn: () => void;
   undoLastAction: () => void;
-
-  // Display settings
-  setShowUniversitiesCard: (show: boolean) => void;
-
-  // Resets
-  resetScore: () => void;
-  resetInnings: () => void;
   resetMatch: () => void;
+  newMatch: () => void;
 
-  // Sync / Hydrate
-  hydrateFromSnapshot: (snapshot: MatchSnapshot, lastSavedTime?: string, updatedAt?: number) => void;
+  setWinnerRule: (rule: WinnerRule) => void;
+  setInterval: (selection: IntervalSelection) => void;
+  playInterval: (selection: IntervalSelection) => void;
+  setIntervalMusic: (on: boolean) => void;
+  setMusicOutput: (output: MusicOutput) => void;
+
+  hydrate: (state: MatchState) => void;
 }
 
 export type MatchStore = MatchState & MatchStoreActions;
 
+const pickState = (s: MatchStore): MatchState => ({ ...createSnapshot(s), history: s.history, updatedAt: s.updatedAt });
+
 export const useMatchStore = create<MatchStore>((set, get) => {
-  const initial = loadFromLocalStorage();
-
-  const recordAndSync = (
-    updater: (state: MatchState) => Partial<MatchState>,
-    actionType?: string,
-    actionDesc?: string
-  ) => {
-    set((state) => {
-      // Create snapshot before change if an action is recorded
-      let newHistory = state.history;
-      if (actionType && actionDesc) {
-        const snapshot = createSnapshot(state);
-        const action: ScoreAction = {
-          id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          timestamp: Date.now(),
-          type: actionType,
-          description: actionDesc,
-          snapshot,
-        };
-        newHistory = [action, ...state.history.slice(0, 49)];
-      }
-
-      const partial = updater(state);
-      const now = Date.now();
-      const timeStr = new Date().toLocaleTimeString();
-
-      // Determine updated scores for teams based on batting team
-      const newBattingTeam = partial.battingTeam ?? state.battingTeam;
-      const newScore = partial.score ?? state.score;
-
-      const updatedTeamAScore =
-        newBattingTeam === 'teamA' ? newScore : partial.teamAScore ?? state.teamAScore;
-      const updatedTeamBScore =
-        newBattingTeam === 'teamB' ? newScore : partial.teamBScore ?? state.teamBScore;
-
-      const newState: MatchState = {
-        ...state,
-        ...partial,
-        teamAScore: updatedTeamAScore,
-        teamBScore: updatedTeamBScore,
-        history: newHistory,
-        lastSavedTime: timeStr,
-        updatedAt: now,
-      };
-
-      // Persist to local storage
-      saveToLocalStorage(newState);
-
-      // Broadcast to Overlay via BroadcastChannel
-      realtimeService.broadcast(createSnapshot(newState), timeStr, now);
-
-      return newState;
-    });
+  const commit = (draft: MatchState) => {
+    // Always newer than what this window has seen, so other windows accept it even if the clock jumps back.
+    const next = { ...draft, updatedAt: Math.max(Date.now(), get().updatedAt + 1) };
+    saveToLocalStorage(next);
+    realtimeService.broadcast(next);
+    set(next);
   };
 
+  /**
+   * Applies a change. When `description` is given, the previous state is pushed
+   * onto the undo history so the change can be reverted.
+   */
+  const apply = (updater: (s: MatchState) => Partial<MatchState> | null, type?: string, description?: string) => {
+    const current = pickState(get());
+    const partial = updater(current);
+    if (!partial) return;
+
+    let history = current.history;
+    if (type && description) {
+      const action: ScoreAction = {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        timestamp: Date.now(),
+        type,
+        description,
+        snapshot: createSnapshot(current),
+      };
+      history = [action, ...current.history].slice(0, HISTORY_LIMIT);
+    }
+
+    commit({ ...current, ...partial, history, updatedAt: Date.now() });
+  };
+
+  /** Score change for the batting side. Locked (turn ended) sides are ignored. */
+  const changeScore = (field: keyof ScoreState, delta: number, type: string, label: string) =>
+    apply(
+      (s) => {
+        const side = s.battingTeam;
+        if (s.turnDone[side]) return null;
+        const value = Math.max(0, s.scores[side][field] + delta);
+        if (value === s.scores[side][field]) return null;
+        return { scores: { ...s.scores, [side]: { ...s.scores[side], [field]: value } } };
+      },
+      type,
+      `${label} · ${get()[get().battingTeam].code}`
+    );
+
   return {
-    ...initial,
+    ...loadFromLocalStorage(),
 
-    setTeams: (teamA: University, teamB: University) => {
-      recordAndSync(
-        () => ({ teamA, teamB }),
-        'TEAMS_UPDATED',
-        `Matchup: ${teamA.code} vs ${teamB.code}`
-      );
+    setTeam: (side, university) => {
+      const s = get();
+      if (s[otherSide(side)].id === university.id) return false;
+      if (s[side].id === university.id) return true;
+      apply(() => ({ [side]: university }), 'TEAM', `Team ${side === 'teamA' ? 'A' : 'B'} → ${university.code}`);
+      return true;
     },
 
-    setBattingTeam: (team: BattingTeam) => {
-      const state = get();
-      if (state.battingTeam === team) return;
-      const activeScore = team === 'teamA' ? state.teamAScore : state.teamBScore;
-      recordAndSync(
-        () => ({
-          battingTeam: team,
-          score: activeScore,
+    swapTeams: () =>
+      apply(
+        (s) => ({
+          teamA: s.teamB,
+          teamB: s.teamA,
+          scores: { teamA: s.scores.teamB, teamB: s.scores.teamA },
+          turnDone: { teamA: s.turnDone.teamB, teamB: s.turnDone.teamA },
+          battingTeam: otherSide(s.battingTeam),
         }),
-        'BATTING_TEAM_SWITCHED',
-        `Batting switched to ${team === 'teamA' ? state.teamA.code : state.teamB.code}`
+        'SWAP',
+        'Swapped Team A / Team B'
+      ),
+
+    setBattingTeam: (side) =>
+      apply((s) => (s.battingTeam === side ? null : { battingTeam: side }), 'BATTING', `Batting → ${get()[side].code}`),
+
+    switchBattingTeam: () => get().setBattingTeam(otherSide(get().battingTeam)),
+
+    setStatus: (status) =>
+      apply((s) => (s.status === status ? null : { status }), 'STATUS', `Status → ${status}`),
+
+    addRuns: (amount) => changeScore('runs', amount, 'RUN', `+${amount} Run${amount > 1 ? 's' : ''}`),
+    removeRun: () => changeScore('runs', -1, 'RUN', '-1 Run'),
+    addBall: () => changeScore('balls', 1, 'BALL', '+1 Ball'),
+    removeBall: () => changeScore('balls', -1, 'BALL', '-1 Ball'),
+    addOut: () => changeScore('outs', 1, 'OUT', '+1 Out'),
+    removeOut: () => changeScore('outs', -1, 'OUT', '-1 Out'),
+
+    manualOverride: (side, score) => {
+      const clean: ScoreState = {
+        runs: Math.max(0, Math.floor(score.runs) || 0),
+        balls: Math.max(0, Math.floor(score.balls) || 0),
+        outs: Math.max(0, Math.floor(score.outs) || 0),
+      };
+      apply(
+        (s) => ({ scores: { ...s.scores, [side]: clean } }),
+        'OVERRIDE',
+        `Manual override ${get()[side].code}: ${clean.runs}R ${clean.balls}B ${clean.outs}O`
       );
     },
 
-    setStatus: (status: MatchStatus) => {
-      recordAndSync(
-        () => ({ status }),
-        'STATUS_CHANGED',
-        `Match status changed to ${status}`
-      );
-    },
-
-    addRuns: (amount: number) => {
-      const state = get();
-      const newRuns = Math.max(0, state.score.runs + amount);
-      const teamCode = state.battingTeam === 'teamA' ? state.teamA.code : state.teamB.code;
-      recordAndSync(
-        (prev) => ({
-          score: { ...prev.score, runs: newRuns },
-        }),
-        'RUN_ADD',
-        `+${amount} Run${amount > 1 ? 's' : ''} (${teamCode})`
-      );
-    },
-
-    decrementRuns: () => {
-      const state = get();
-      if (state.score.runs <= 0) return;
-      const newRuns = state.score.runs - 1;
-      const teamCode = state.battingTeam === 'teamA' ? state.teamA.code : state.teamB.code;
-      recordAndSync(
-        (prev) => ({
-          score: { ...prev.score, runs: newRuns },
-        }),
-        'RUN_SUBTRACT',
-        `-1 Run (${teamCode})`
-      );
-    },
-
-    addBall: () => {
-      const state = get();
-      const newBalls = state.score.balls + 1;
-      recordAndSync(
-        (prev) => ({
-          score: { ...prev.score, balls: newBalls },
-        }),
-        'BALL_ADD',
-        `+1 Ball (Total: ${newBalls})`
-      );
-    },
-
-    decrementBall: () => {
-      const state = get();
-      if (state.score.balls <= 0) return;
-      const newBalls = state.score.balls - 1;
-      recordAndSync(
-        (prev) => ({
-          score: { ...prev.score, balls: newBalls },
-        }),
-        'BALL_SUBTRACT',
-        `-1 Ball (Total: ${newBalls})`
-      );
-    },
-
-    addOut: () => {
-      const state = get();
-      const newOuts = state.score.outs + 1;
-      const teamCode = state.battingTeam === 'teamA' ? state.teamA.code : state.teamB.code;
-      recordAndSync(
-        (prev) => ({
-          score: { ...prev.score, outs: newOuts },
-        }),
-        'OUT_ADD',
-        `+1 Out (${teamCode} - Total: ${newOuts})`
-      );
-    },
-
-    decrementOut: () => {
-      const state = get();
-      if (state.score.outs <= 0) return;
-      const newOuts = state.score.outs - 1;
-      recordAndSync(
-        (prev) => ({
-          score: { ...prev.score, outs: newOuts },
-        }),
-        'OUT_SUBTRACT',
-        `-1 Out (Total: ${newOuts})`
-      );
-    },
-
-    manualOverrideScore: (runs: number, balls: number, outs: number) => {
-      const validRuns = Math.max(0, runs);
-      const validBalls = Math.max(0, balls);
-      const validOuts = Math.max(0, outs);
-
-      recordAndSync(
-        () => ({
-          score: { runs: validRuns, balls: validBalls, outs: validOuts },
-        }),
-        'MANUAL_OVERRIDE',
-        `Score manually updated to ${validRuns} R, ${validBalls} B, ${validOuts} O`
-      );
-    },
-
-    switchBattingTeam: () => {
-      const state = get();
-      const nextTeam: BattingTeam = state.battingTeam === 'teamA' ? 'teamB' : 'teamA';
-      const targetScore = nextTeam === 'teamA' ? state.teamAScore : state.teamBScore;
-      recordAndSync(
-        () => ({
-          battingTeam: nextTeam,
-          score: targetScore,
-        }),
-        'SWITCH_BATTING',
-        `Switched batting to ${nextTeam === 'teamA' ? state.teamA.code : state.teamB.code}`
-      );
-    },
-
-    endInnings: () => {
-      const state = get();
-      const nextInnings: Innings = state.innings === 1 ? 2 : 1;
-      const nextBattingTeam: BattingTeam = state.battingTeam === 'teamA' ? 'teamB' : 'teamA';
-      const nextScore = nextBattingTeam === 'teamA' ? state.teamAScore : state.teamBScore;
-
-      recordAndSync(
-        () => ({
-          innings: nextInnings,
-          battingTeam: nextBattingTeam,
-          score: nextScore,
-          status: 'INTERVAL',
-        }),
-        'END_INNINGS',
-        `Innings ended. Switched to ${nextBattingTeam === 'teamA' ? state.teamA.code : state.teamB.code} (Status: INTERVAL)`
-      );
-    },
+    endTurn: () =>
+      apply(
+        (s) => {
+          const side = s.battingTeam;
+          if (s.turnDone[side]) return null;
+          const turnDone = { ...s.turnDone, [side]: true };
+          const next = otherSide(side);
+          return { turnDone, battingTeam: turnDone[next] ? side : next };
+        },
+        'END_TURN',
+        `Turn ended · ${get()[get().battingTeam].code} ${get().scores[get().battingTeam].runs}R`
+      ),
 
     undoLastAction: () => {
-      set((state) => {
-        if (state.history.length === 0) return state;
-
-        const [lastAction, ...remainingHistory] = state.history;
-        const snapshot = lastAction.snapshot;
-        const now = Date.now();
-        const timeStr = new Date().toLocaleTimeString();
-
-        const restoredState: MatchState = {
-          ...state,
-          teamA: snapshot.teamA,
-          teamB: snapshot.teamB,
-          battingTeam: snapshot.battingTeam,
-          innings: snapshot.innings,
-          status: snapshot.status,
-          score: snapshot.score,
-          teamAScore: snapshot.teamAScore,
-          teamBScore: snapshot.teamBScore,
-          history: remainingHistory,
-          lastSavedTime: timeStr,
-          updatedAt: now,
-        };
-
-        saveToLocalStorage(restoredState);
-        realtimeService.broadcast(createSnapshot(restoredState), timeStr, now);
-
-        return restoredState;
+      const s = get();
+      const [last, ...rest] = s.history;
+      if (!last) return;
+      // Interval media choice and music are operator preferences, not score state.
+      commit({
+        ...last.snapshot,
+        interval: s.interval,
+        intervalMusic: s.intervalMusic,
+        musicOutput: s.musicOutput,
+        history: rest,
+        updatedAt: Date.now(),
       });
-    },
-
-    resetScore: () => {
-      recordAndSync(
-        (prev) => ({
-          score: { runs: 0, balls: 0, outs: 0 },
-          teamAScore: prev.battingTeam === 'teamA' ? { runs: 0, balls: 0, outs: 0 } : prev.teamAScore,
-          teamBScore: prev.battingTeam === 'teamB' ? { runs: 0, balls: 0, outs: 0 } : prev.teamBScore,
-        }),
-        'RESET_SCORE',
-        'Current batting score reset to 0'
-      );
-    },
-
-    resetInnings: () => {
-      recordAndSync(
-        () => ({
-          innings: 1,
-          score: { runs: 0, balls: 0, outs: 0 },
-          teamAScore: { runs: 0, balls: 0, outs: 0 },
-          teamBScore: { runs: 0, balls: 0, outs: 0 },
-        }),
-        'RESET_INNINGS',
-        'Innings reset to Innings 1 (all scores 0)'
-      );
-    },
-
-    setShowUniversitiesCard: (show: boolean) => {
-      recordAndSync(
-        () => ({ showUniversitiesCard: show }),
-        'TOGGLE_UNIVERSITIES_CARD',
-        `Participating Universities card ${show ? 'shown' : 'hidden'}`
-      );
     },
 
     resetMatch: () => {
-      const initial = getInitialMatchState();
-      set({
-        ...initial,
+      const s = get();
+      commit({
+        ...pickState(s),
+        status: 'READY',
+        battingTeam: 'teamA',
+        scores: { teamA: emptyScore(), teamB: emptyScore() },
+        turnDone: { teamA: false, teamB: false },
+        winnerRule: 'AUTO',
         history: [],
-        lastSavedTime: new Date().toLocaleTimeString(),
         updatedAt: Date.now(),
       });
-      saveToLocalStorage(initial);
-      realtimeService.broadcast(createSnapshot(initial), initial.lastSavedTime, initial.updatedAt);
     },
 
-    hydrateFromSnapshot: (snapshot: MatchSnapshot, lastSavedTime?: string, updatedAt?: number) => {
-      set((state) => ({
-        ...state,
-        ...snapshot,
-        lastSavedTime: lastSavedTime || state.lastSavedTime,
-        updatedAt: updatedAt || state.updatedAt,
-      }));
+    newMatch: () => {
+      const s = pickState(get());
+      const played = s.history.length > 0 || s.scores.teamA.runs + s.scores.teamB.runs > 0;
+      if (played) {
+        appendToArchive({
+          matchId: s.matchId,
+          matchNumber: s.matchNumber,
+          teamA: s.teamA.code,
+          teamB: s.teamB.code,
+          scores: s.scores,
+          result: getMatchResult(s).headline,
+          savedAt: Date.now(),
+        });
+      }
+      const fresh = getInitialMatchState();
+      commit({
+        ...fresh,
+        matchId: newMatchId(),
+        matchNumber: played ? s.matchNumber + 1 : s.matchNumber,
+        teamA: s.teamA,
+        teamB: s.teamB,
+        interval: s.interval,
+        intervalMusic: s.intervalMusic,
+        musicOutput: s.musicOutput,
+      });
+    },
+
+    setWinnerRule: (rule) =>
+      apply((s) => (s.winnerRule === rule ? null : { winnerRule: rule }), 'WINNER', `Winner rule → ${rule}`),
+
+    setInterval: (selection) => apply(() => ({ interval: selection })),
+
+    playInterval: (selection) =>
+      apply(() => ({ interval: selection, status: 'INTERVAL' as MatchStatus }), 'STATUS', 'Status → INTERVAL (media loop)'),
+
+    setIntervalMusic: (on) => apply(() => ({ intervalMusic: on })),
+
+    setMusicOutput: (output) => apply(() => ({ musicOutput: output })),
+
+    hydrate: (state) => {
+      if (state.updatedAt <= get().updatedAt) return;
+      saveToLocalStorage(state);
+      set(state);
     },
   };
 });

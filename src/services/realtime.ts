@@ -1,62 +1,119 @@
-import { BroadcastMessage, MatchSnapshot } from '../types/match';
+import { MatchState } from '../types/match';
+import { sanitizeState } from './persistence';
 
 const CHANNEL_NAME = 'belihuloya-scoreboard';
 
-class RealtimeChannel {
+type Listener = (state: MatchState) => void;
+
+/**
+ * Keeps control.html and overlay.html in sync on one laptop.
+ *
+ * 1. BroadcastChannel — instant, works between tabs of the same browser.
+ * 2. Local sync endpoint on the Vite server (/api/state + /api/events) — works
+ *    between different browsers, e.g. control in Chrome and overlay inside OBS.
+ *    No internet needed; it is the same 127.0.0.1 server that serves the pages.
+ *
+ * On static hosting (Vercel) the endpoint does not exist, so only (1) is used:
+ * control and overlay must then run in the same browser — e.g. both inside OBS
+ * (Custom Browser Dock + Browser Source).
+ */
+class RealtimeService {
   private channel: BroadcastChannel | null = null;
-  private listeners: Set<(message: BroadcastMessage) => void> = new Set();
+  private source: EventSource | null = null;
+  private listeners = new Set<Listener>();
+  private connectionListeners = new Set<(online: boolean) => void>();
+  private serverOnline = false;
+  private serverAvailable: Promise<boolean> = Promise.resolve(false);
 
   constructor() {
-    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    if (typeof window === 'undefined') return;
+
+    if ('BroadcastChannel' in window) {
       try {
         this.channel = new BroadcastChannel(CHANNEL_NAME);
-        this.channel.onmessage = (event: MessageEvent<BroadcastMessage>) => {
-          if (event.data && event.data.type === 'MATCH_STATE_UPDATED') {
-            this.listeners.forEach((listener) => listener(event.data));
-          }
-        };
+        this.channel.onmessage = (event: MessageEvent) => this.receive(event.data);
       } catch (err) {
-        console.warn('BroadcastChannel initialization failed, falling back to local events:', err);
+        console.warn('BroadcastChannel unavailable:', err);
       }
+    }
+
+    if ('EventSource' in window && import.meta.env.MODE !== 'test') {
+      this.serverAvailable = fetch('/api/state', { method: 'HEAD', cache: 'no-store' })
+        .then((res) => res.ok && res.headers.get('X-Score-Sync') === '1')
+        .catch(() => false);
+      this.serverAvailable.then((available) => available && this.connectServer());
     }
   }
 
-  public broadcast(snapshot: MatchSnapshot, lastSavedTime: string, updatedAt: number): void {
-    const message: BroadcastMessage = {
-      type: 'MATCH_STATE_UPDATED',
-      payload: {
-        ...snapshot,
-        lastSavedTime,
-        updatedAt,
-      },
-    };
-
-    if (this.channel) {
+  private connectServer() {
+    const source = new EventSource('/api/events');
+    this.source = source;
+    source.onopen = () => this.setOnline(true);
+    source.onmessage = (event) => {
       try {
-        this.channel.postMessage(message);
-      } catch (err) {
-        console.warn('Failed to postMessage via BroadcastChannel:', err);
+        this.receive(JSON.parse(event.data));
+      } catch {
+        /* ignore malformed frames */
       }
-    }
-
-    // Also notify any same-window listeners
-    this.listeners.forEach((listener) => listener(message));
-  }
-
-  public subscribe(callback: (message: BroadcastMessage) => void): () => void {
-    this.listeners.add(callback);
-    return () => {
-      this.listeners.delete(callback);
     };
+    // EventSource reconnects on its own; just reflect the state.
+    source.onerror = () => this.setOnline(false);
   }
 
-  public close(): void {
-    if (this.channel) {
-      this.channel.close();
-      this.channel = null;
+  private setOnline(online: boolean) {
+    if (this.serverOnline === online) return;
+    this.serverOnline = online;
+    this.connectionListeners.forEach((l) => l(online));
+  }
+
+  private receive(data: unknown) {
+    const state = sanitizeState(data);
+    if (state) this.listeners.forEach((l) => l(state));
+  }
+
+  broadcast(state: MatchState) {
+    try {
+      this.channel?.postMessage(state);
+    } catch (err) {
+      console.warn('BroadcastChannel post failed:', err);
     }
+
+    const body = JSON.stringify(state);
+    this.serverAvailable.then((available) => {
+      if (!available) return;
+      fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(() =>
+        this.setOnline(false)
+      );
+    });
+  }
+
+  async fetchServerState(): Promise<MatchState | null> {
+    if (!(await this.serverAvailable)) return null;
+    try {
+      const res = await fetch('/api/state', { cache: 'no-store' });
+      if (!res.ok) return null;
+      return sanitizeState(await res.json());
+    } catch {
+      return null;
+    }
+  }
+
+  subscribe(listener: Listener) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  onConnection(listener: (online: boolean) => void) {
+    this.connectionListeners.add(listener);
+    listener(this.serverOnline);
+    return () => this.connectionListeners.delete(listener);
+  }
+
+  close() {
+    this.channel?.close();
+    this.source?.close();
     this.listeners.clear();
   }
 }
 
-export const realtimeService = new RealtimeChannel();
+export const realtimeService = new RealtimeService();

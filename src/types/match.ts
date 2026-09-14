@@ -2,9 +2,7 @@ import { University } from './university';
 
 export type MatchStatus = 'READY' | 'LIVE' | 'INTERVAL' | 'FINISHED';
 
-export type BattingTeam = 'teamA' | 'teamB';
-
-export type Innings = 1 | 2;
+export type TeamSide = 'teamA' | 'teamB';
 
 export interface ScoreState {
   runs: number;
@@ -12,16 +10,33 @@ export interface ScoreState {
   outs: number;
 }
 
+/** How the winner is decided on the FINISHED screen. AUTO = most runs wins. */
+export type WinnerRule = 'AUTO' | 'teamA' | 'teamB' | 'TIE';
+
+export type MusicOutput = 'overlay' | 'control';
+
+export interface IntervalSelection {
+  /** Media library item id (built-in or uploaded file name). */
+  id: string;
+  /** Uploaded video/image URL, or null to use the built-in animated screen. */
+  mediaUrl: string | null;
+}
+
 export interface MatchSnapshot {
+  matchId: string;
+  matchNumber: number;
   teamA: University;
   teamB: University;
-  battingTeam: BattingTeam;
-  innings: Innings;
+  battingTeam: TeamSide;
   status: MatchStatus;
-  score: ScoreState;
-  teamAScore: ScoreState;
-  teamBScore: ScoreState;
-  showUniversitiesCard: boolean;
+  scores: Record<TeamSide, ScoreState>;
+  /** A side whose batting turn has been ended is locked. */
+  turnDone: Record<TeamSide, boolean>;
+  winnerRule: WinnerRule;
+  interval: IntervalSelection;
+  intervalMusic: boolean;
+  /** Where interval music plays: inside the OBS overlay, or from the control panel window. */
+  musicOutput: MusicOutput;
 }
 
 export interface ScoreAction {
@@ -32,25 +47,17 @@ export interface ScoreAction {
   snapshot: MatchSnapshot;
 }
 
-export interface MatchState {
-  teamA: University;
-  teamB: University;
-  battingTeam: BattingTeam;
-  innings: Innings;
-  status: MatchStatus;
-  score: ScoreState;
-  teamAScore: ScoreState;
-  teamBScore: ScoreState;
-  showUniversitiesCard: boolean;
+export interface MatchState extends MatchSnapshot {
   history: ScoreAction[];
-  lastSavedTime: string;
   updatedAt: number;
 }
 
-export interface BroadcastMessage {
-  type: 'MATCH_STATE_UPDATED';
-  payload: MatchSnapshot & {
-    lastSavedTime: string;
-    updatedAt: number;
-  };
+export interface ArchivedMatch {
+  matchId: string;
+  matchNumber: number;
+  teamA: string;
+  teamB: string;
+  scores: Record<TeamSide, ScoreState>;
+  result: string;
+  savedAt: number;
 }

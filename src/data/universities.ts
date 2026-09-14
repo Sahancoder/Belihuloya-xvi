@@ -1,12 +1,16 @@
 import { University } from '../types/university';
 
+/**
+ * Logos live in /public/universities. A missing file falls back to a coloured
+ * code badge, so a logo can be dropped in later using the path listed here.
+ */
 export const UNIVERSITIES: University[] = [
   {
     id: 'susl',
     code: 'SUSL',
     name: 'Sabaragamuwa University of Sri Lanka',
     shortName: 'Sabaragamuwa',
-    logoPath: '/universities/sabara-removebg-preview.png',
+    logoPath: '/universities/sabra.png',
     primaryColor: '#800000',
     secondaryColor: '#FFD700',
   },
@@ -69,7 +73,7 @@ export const UNIVERSITIES: University[] = [
     code: 'UOR',
     name: 'University of Ruhuna',
     shortName: 'Ruhuna',
-    logoPath: '/universities/uor.svg',
+    logoPath: '/universities/ruhuna .png',
     primaryColor: '#003366',
     secondaryColor: '#FFD700',
   },
@@ -78,7 +82,7 @@ export const UNIVERSITIES: University[] = [
     code: 'EUSL',
     name: 'Eastern University, Sri Lanka',
     shortName: 'Eastern',
-    logoPath: '/universities/eusl.svg',
+    logoPath: '/universities/eusl.png',
     primaryColor: '#1A365D',
     secondaryColor: '#ECC94B',
   },
@@ -87,7 +91,7 @@ export const UNIVERSITIES: University[] = [
     code: 'SEUSL',
     name: 'South Eastern University of Sri Lanka',
     shortName: 'South Eastern',
-    logoPath: '/universities/seusl.svg',
+    logoPath: '/universities/seusl.png',
     primaryColor: '#065F46',
     secondaryColor: '#F59E0B',
   },
@@ -105,14 +109,14 @@ export const UNIVERSITIES: University[] = [
     code: 'WUSL',
     name: 'Wayamba University of Sri Lanka',
     shortName: 'Wayamba',
-    logoPath: '/universities/wusl.svg',
+    logoPath: '/universities/wusl.png',
     primaryColor: '#1E3A8A',
     secondaryColor: '#F3F4F6',
   },
   {
     id: 'uwu',
     code: 'UWU',
-    name: 'Uva Wellassa University',
+    name: 'Uva Wellassa University of Sri Lanka',
     shortName: 'Uva Wellassa',
     logoPath: '/universities/uwa.png',
     primaryColor: '#B45309',
@@ -121,29 +125,26 @@ export const UNIVERSITIES: University[] = [
   {
     id: 'ousl',
     code: 'OUSL',
-    name: 'The Open University of Sri Lanka',
+    name: 'Open University of Sri Lanka',
     shortName: 'Open University',
-    logoPath: '/universities/ousl.svg',
+    logoPath: '/universities/ousl.png',
     primaryColor: '#1E40AF',
     secondaryColor: '#FACC15',
   },
   {
     id: 'uvpa',
     code: 'UVPA',
-    name: 'University of the Visual and Performing Arts',
+    name: 'University of Visual & Performing Arts',
     shortName: 'Visual & Performing Arts',
-    logoPath: '/universities/uvpa.svg',
+    logoPath: '/universities/uvpa.gif',
     primaryColor: '#831843',
     secondaryColor: '#FCD34D',
   },
 ];
 
+export const HOST_UNIVERSITY = UNIVERSITIES[0];
+
 export const getUniversityById = (id: string): University => {
   const found = UNIVERSITIES.find((u) => u.id.toLowerCase() === id.toLowerCase());
-  return found || UNIVERSITIES[0];
-};
-
-export const getUniversityByCode = (code: string): University => {
-  const found = UNIVERSITIES.find((u) => u.code.toLowerCase() === code.toLowerCase());
   return found || UNIVERSITIES[0];
 };

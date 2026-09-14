@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/control", "destination": "/control.html" },
+    { "source": "/overlay", "destination": "/overlay.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(control|overlay).html",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
+}

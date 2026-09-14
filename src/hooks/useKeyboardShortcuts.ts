@@ -1,78 +1,38 @@
 import { useEffect } from 'react';
 import { useMatchStore } from '../store/matchStore';
 
-interface UseKeyboardShortcutsOptions {
-  enabled?: boolean;
-}
-
-export const useKeyboardShortcuts = ({ enabled = true }: UseKeyboardShortcutsOptions = {}) => {
-  const addRuns = useMatchStore((s) => s.addRuns);
-  const addBall = useMatchStore((s) => s.addBall);
-  const addOut = useMatchStore((s) => s.addOut);
-  const undoLastAction = useMatchStore((s) => s.undoLastAction);
-
+/**
+ * 1–5 add runs, B adds a ball, O adds an out, U undoes.
+ * Disabled while typing in inputs or while a dialog is open.
+ */
+export const useKeyboardShortcuts = (enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ignore if user is inside an input, textarea, or select
-      const activeTag = document.activeElement?.tagName.toLowerCase();
-      if (
-        activeTag === 'input' ||
-        activeTag === 'textarea' ||
-        activeTag === 'select' ||
-        document.activeElement?.getAttribute('contenteditable') === 'true'
-      ) {
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || el?.isContentEditable) return;
+      if (event.ctrlKey || event.altKey || event.metaKey || event.repeat) return;
+
+      const store = useMatchStore.getState();
+      const key = event.key.toLowerCase();
+
+      if (['1', '2', '3', '4', '5'].includes(key)) {
+        store.addRuns(Number(key));
+      } else if (key === 'b') {
+        store.addBall();
+      } else if (key === 'o') {
+        store.addOut();
+      } else if (key === 'u') {
+        store.undoLastAction();
+      } else {
         return;
       }
-
-      // Ignore if modifier keys (Ctrl, Alt, Meta) are held
-      if (event.ctrlKey || event.altKey || event.metaKey) {
-        return;
-      }
-
-      switch (event.key) {
-        case '1':
-          event.preventDefault();
-          addRuns(1);
-          break;
-        case '2':
-          event.preventDefault();
-          addRuns(2);
-          break;
-        case '3':
-          event.preventDefault();
-          addRuns(3);
-          break;
-        case '4':
-          event.preventDefault();
-          addRuns(4);
-          break;
-        case '5':
-          event.preventDefault();
-          addRuns(5);
-          break;
-        case 'b':
-        case 'B':
-          event.preventDefault();
-          addBall();
-          break;
-        case 'o':
-        case 'O':
-          event.preventDefault();
-          addOut();
-          break;
-        case 'u':
-        case 'U':
-          event.preventDefault();
-          undoLastAction();
-          break;
-        default:
-          break;
-      }
+      event.preventDefault();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [enabled, addRuns, addBall, addOut, undoLastAction]);
+  }, [enabled]);
 };

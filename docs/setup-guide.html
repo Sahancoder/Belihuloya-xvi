@@ -1,0 +1,586 @@
+<title>Belihuloya XVI Broadcast Setup</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap"
+/>
+<style>
+  :root {
+    --ground: #eef3f7;
+    --surface: #ffffff;
+    --inset: #e3ebf2;
+    --ink: #0b1b2e;
+    --ink-soft: #3d5670;
+    --ink-faint: #6a8198;
+    --line: #cfdbe6;
+    --accent: #007a8a;
+    --accent-soft: #d6f3f6;
+    --green: #0b8f5c;
+    --green-soft: #daf5ea;
+    --gold: #9a6a00;
+    --gold-soft: #fbefcf;
+    --red: #c4202c;
+    --red-soft: #fde2e4;
+    --band: #0a213d;
+    --band-ink: #ffffff;
+    --band-muted: #9fb3cc;
+    --band-accent: #00cfe8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #06172d;
+      --surface: #0a213d;
+      --inset: #0c2847;
+      --ink: #eef4fa;
+      --ink-soft: #b4c6da;
+      --ink-faint: #7f96b1;
+      --line: #183b5f;
+      --accent: #00cfe8;
+      --accent-soft: #06343f;
+      --green: #10c981;
+      --green-soft: #073426;
+      --gold: #f6c445;
+      --gold-soft: #3a2e0a;
+      --red: #ff5a64;
+      --red-soft: #3d1016;
+      --band: #041126;
+      --band-ink: #ffffff;
+      --band-muted: #9fb3cc;
+      --band-accent: #00cfe8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #06172d;
+    --surface: #0a213d;
+    --inset: #0c2847;
+    --ink: #eef4fa;
+    --ink-soft: #b4c6da;
+    --ink-faint: #7f96b1;
+    --line: #183b5f;
+    --accent: #00cfe8;
+    --accent-soft: #06343f;
+    --green: #10c981;
+    --green-soft: #073426;
+    --gold: #f6c445;
+    --gold-soft: #3a2e0a;
+    --red: #ff5a64;
+    --red-soft: #3d1016;
+    --band: #041126;
+    --band-ink: #ffffff;
+    --band-muted: #9fb3cc;
+    --band-accent: #00cfe8;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 17px/1.6 "Barlow", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  code, .mono { font-family: "JetBrains Mono", Consolas, monospace; font-size: 0.86em; }
+  code { background: var(--inset); padding: 0.1em 0.4em; border-radius: 4px; overflow-wrap: anywhere; }
+
+  /* Masthead: echoes the on-air scoreboard strip */
+  .masthead { background: var(--band); color: var(--band-ink); padding-inline: 20px; }
+  .masthead-inner { max-width: 1120px; margin: 0 auto; padding-block: 40px 30px; }
+  .stripe { display: flex; height: 5px; }
+  .stripe span { flex: 1; }
+  .eyebrow { font: 700 13px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.28em; text-transform: uppercase; color: var(--band-accent); }
+  .masthead h1 {
+    font: 800 clamp(40px, 7vw, 76px)/0.92 "Barlow Condensed", "Arial Narrow", sans-serif;
+    margin: 12px 0 14px; letter-spacing: 0.01em; text-transform: uppercase; text-wrap: balance;
+  }
+  .masthead p { margin: 0; max-width: 62ch; color: var(--band-muted); font-size: 18px; }
+  .signal { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 26px; font: 600 15px/1.3 "Barlow Condensed", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--band-muted); }
+  .signal b { color: var(--band-ink); font-weight: 700; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 56px; padding-block: 44px 80px; }
+  nav.toc { position: sticky; top: 24px; align-self: start; font-size: 15px; }
+  nav.toc p { font: 700 12px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 12px; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a { display: flex; gap: 10px; padding: 6px 8px; border-radius: 6px; color: var(--ink-soft); text-decoration: none; }
+  nav.toc a::before { content: counter(toc); font: 700 14px/1.5 "Barlow Condensed", sans-serif; color: var(--ink-faint); min-width: 1ch; }
+  nav.toc a:hover { background: var(--inset); color: var(--ink); }
+
+  main { min-width: 0; max-width: 760px; }
+  section { padding-top: 12px; margin-bottom: 64px; scroll-margin-top: 20px; }
+  h2 {
+    font: 800 38px/1 "Barlow Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: 0.01em;
+    margin: 0 0 6px; display: flex; align-items: baseline; gap: 14px; text-wrap: balance;
+  }
+  h2 .n { color: var(--accent); font-size: 0.8em; }
+  .lede { color: var(--ink-soft); margin: 0 0 24px; max-width: 65ch; }
+  h3 { font: 700 22px/1.2 "Barlow Condensed", sans-serif; letter-spacing: 0.04em; text-transform: uppercase; margin: 36px 0 10px; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  .si { color: var(--ink-faint); font-style: italic; }
+
+  /* Two setups compared */
+  .choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .option { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+  .option.pick { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+  .option h3 { margin: 0; }
+  .tag { align-self: flex-start; font: 700 12px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.16em; text-transform: uppercase; padding: 5px 8px; border-radius: 4px; }
+  .tag.go { background: var(--green-soft); color: var(--green); }
+  .tag.alt { background: var(--inset); color: var(--ink-soft); }
+  .option ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 6px; font-size: 16px; }
+  .option li { display: grid; grid-template-columns: 18px 1fr; gap: 6px; }
+  .option li::before { font-weight: 700; }
+  .option li.y::before { content: "+"; color: var(--green); }
+  .option li.n::before { content: "–"; color: var(--red); }
+
+  /* Ordered procedures */
+  ol.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 14px; }
+  ol.steps > li { counter-increment: step; display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 14px; align-items: start; }
+  ol.steps > li::before {
+    content: counter(step); display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+    background: var(--inset); color: var(--ink); font: 800 20px/1 "Barlow Condensed", sans-serif;
+  }
+  ol.steps > li > div { padding-top: 6px; }
+  ol.steps p { margin-bottom: 8px; }
+  .path { font: 600 15px/1.4 "Barlow Condensed", sans-serif; letter-spacing: 0.04em; }
+  .path span { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
+
+  /* OBS properties dialog, reproduced as rows */
+  .props { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 14px 0 18px; }
+  .props-head { display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; background: var(--inset); font: 700 14px/1.3 "Barlow Condensed", sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+  .props dl { margin: 0; display: grid; grid-template-columns: minmax(150px, 34%) minmax(0, 1fr); }
+  .props dt, .props dd { margin: 0; padding: 10px 16px; border-top: 1px solid var(--line); }
+  .props dt { color: var(--ink-soft); font-size: 15px; }
+  .props dd { font-weight: 600; overflow-wrap: anywhere; }
+  .props dd small { display: block; font-weight: 400; color: var(--ink-faint); font-size: 14px; }
+  .box { display: inline-block; width: 15px; height: 15px; border: 2px solid var(--ink-faint); border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+  .box.on { background: var(--accent); border-color: var(--accent); position: relative; }
+  .box.on::after { content: ""; position: absolute; left: 3px; top: 0; width: 4px; height: 8px; border: solid var(--surface); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+
+  /* Scene stack diagram */
+  .stack { display: grid; gap: 6px; margin: 14px 0 18px; }
+  .layer { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px 16px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+  .layer b { font: 700 13px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); }
+  .layer.top { border-color: var(--accent); }
+
+  pre { background: var(--band); color: #e6f6ff; padding: 16px 18px; border-radius: 10px; overflow-x: auto; font: 14px/1.6 "JetBrains Mono", Consolas, monospace; margin: 10px 0 16px; }
+  pre .c { color: #7f96b1; }
+
+  .note { border-radius: 10px; padding: 14px 16px; margin: 16px 0; font-size: 16px; display: grid; gap: 4px; }
+  .note strong { font: 700 14px/1.2 "Barlow Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; }
+  .note p { margin: 0; }
+  .note.warn { background: var(--gold-soft); }
+  .note.warn strong { color: var(--gold); }
+  .note.stop { background: var(--red-soft); }
+  .note.stop strong { color: var(--red); }
+  .note.tip { background: var(--accent-soft); }
+  .note.tip strong { color: var(--accent); }
+
+  /* Status flow */
+  .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+  .st { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 8px; padding: 12px 14px; font-size: 15px; }
+  .st b { display: block; font: 800 22px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.06em; color: var(--c); margin-bottom: 6px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .table { overflow-x: auto; margin: 12px 0 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  th, td { text-align: left; padding: 10px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+  thead th { border-top: 0; background: var(--inset); font: 700 13px/1.2 "Barlow Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
+  kbd { font: 600 14px/1 "JetBrains Mono", monospace; border: 1px solid var(--line); border-bottom-width: 3px; background: var(--surface); border-radius: 5px; padding: 3px 7px; white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Match-day checklist */
+  .check { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .check label { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+  .check label:hover { background: var(--inset); }
+  .check input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--green); }
+  .check input:checked + span { color: var(--ink-faint); text-decoration: line-through; }
+  .phase { font: 700 14px/1 "Barlow Condensed", sans-serif; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin: 22px 0 6px 12px; }
+
+  footer { border-top: 1px solid var(--line); padding-top: 20px; color: var(--ink-faint); font-size: 15px; }
+
+  @media (max-width: 900px) {
+    .wrap { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    nav.toc { position: static; }
+    nav.toc ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 620px) {
+    .choice, .flow { grid-template-columns: minmax(0, 1fr); }
+    .props dl { grid-template-columns: minmax(0, 1fr); }
+    .props dd { border-top: 0; padding-top: 0; }
+    .layer { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    h2 { font-size: 32px; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="stripe" aria-hidden="true"><span style="background:#10C981"></span><span style="background:#F6C445"></span><span style="background:#EF3340"></span><span style="background:#00CFE8"></span></div>
+  <div class="masthead-inner">
+    <div class="eyebrow">Sabra Elle Championship · Operator handbook</div>
+    <h1>Belihuloya XVI broadcast setup</h1>
+    <p>How to run the live scoreboard, connect it to OBS Studio, stream to Facebook Live, and host it on Vercel. Written for the score operator and the OBS operator at Sabaragamuwa University of Sri Lanka, Belihuloya.</p>
+    <div class="signal">
+      <span>Canvas <b>1920 × 1080</b></span>
+      <span>Control <b>control.html</b></span>
+      <span>OBS <b>overlay.html</b></span>
+      <span>Keys <b>1–5 · B · O · U</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Contents">
+    <p>Contents</p>
+    <ol>
+      <li><a href="#choose">Choose a setup</a></li>
+      <li><a href="#start">Start the scoreboard</a></li>
+      <li><a href="#obs">Set up OBS</a></li>
+      <li><a href="#operate">Run the match</a></li>
+      <li><a href="#facebook">Go live on Facebook</a></li>
+      <li><a href="#vercel">Host on Vercel</a></li>
+      <li><a href="#checklist">Match-day checklist</a></li>
+      <li><a href="#fix">Troubleshooting</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section id="choose">
+      <h2><span class="n">1</span>Choose a setup</h2>
+      <p class="lede">There are two pages. <code>control.html</code> is the operator panel — the audience never sees it. <code>overlay.html</code> is the clean graphic that OBS puts on top of the camera. The two pages must share the score, and <em>how</em> they share it decides which setup you use.</p>
+
+      <div class="choice">
+        <div class="option pick">
+          <span class="tag go">Use on match day</span>
+          <h3>A · Local laptop</h3>
+          <p style="margin:0">The scoreboard runs from the project folder on the streaming laptop at <code>http://127.0.0.1:4173</code>.</p>
+          <ul>
+            <li class="y">Works with no internet (only Facebook needs it)</li>
+            <li class="y">Control panel can be in Chrome, full screen, on a second monitor</li>
+            <li class="y">Upload Media button works (MP4 logo videos)</li>
+            <li class="y">Score survives a laptop or server restart</li>
+            <li class="n">Needs Node.js installed on the laptop</li>
+          </ul>
+        </div>
+        <div class="option">
+          <span class="tag alt">Optional</span>
+          <h3>B · Hosted on Vercel</h3>
+          <p style="margin:0">The same pages on a public link like <code>belihuloya-xvi.vercel.app</code>.</p>
+          <ul>
+            <li class="y">No install — any laptop with OBS can use it</li>
+            <li class="y">Easy to share a preview link with the organising committee</li>
+            <li class="n">Control panel <strong>must run inside OBS</strong> (see step 6)</li>
+            <li class="n">No Upload button — videos go in <code>public/media</code> before deploying</li>
+            <li class="n">Pages load from the internet</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="note tip">
+        <strong>Why the difference</strong>
+        <p>Locally, a small sync server on the laptop passes every score change from Chrome to OBS instantly. Vercel only serves files, so the two pages can talk only when they are open in the same browser — and OBS has its own browser, separate from Chrome.</p>
+      </div>
+    </section>
+
+    <section id="start">
+      <h2><span class="n">2</span>Start the scoreboard</h2>
+      <p class="lede">Setup A. Do the first-time part once, a day before the event, while you still have internet.</p>
+
+      <h3>First time only</h3>
+      <ol class="steps">
+        <li><div>
+          <p>Install <strong>Node.js LTS</strong> from <a href="https://nodejs.org">nodejs.org</a> (version 20 or newer). Keep the default options.</p>
+        </div></li>
+        <li><div>
+          <p>Copy the project folder <code>Belihuloya xvi live</code> to the streaming laptop, or clone it:</p>
+<pre>git clone https://github.com/Sahancoder/Belihuloya-xvi.git</pre>
+        </div></li>
+        <li><div>
+          <p>Double-click <code>start-scoreboard.bat</code>. The first run installs packages, which takes a few minutes.</p>
+        </div></li>
+      </ol>
+
+      <h3>Every match day</h3>
+      <ol class="steps">
+        <li><div>
+          <p>Double-click <code>start-scoreboard.bat</code> in the project folder. A black window opens and the control panel opens in your browser.</p>
+          <p class="si">Keep the black window open for the whole event. Closing it stops the scoreboard.</p>
+        </div></li>
+        <li><div>
+          <p>Press <kbd>F11</kbd> in the browser to make the control panel fill the screen.</p>
+        </div></li>
+        <li><div>
+          <p>Check the header shows a green <strong>OBS Sync Online</strong> light. Yellow <em>Local Tab Sync</em> means the server is not reachable — see <a href="#fix">Troubleshooting</a>.</p>
+        </div></li>
+      </ol>
+
+      <div class="table">
+        <table>
+          <thead><tr><th>Page</th><th>Address</th><th>Who uses it</th></tr></thead>
+          <tbody>
+            <tr><td>Control panel</td><td class="mono">http://127.0.0.1:4173/control.html</td><td>Score operator</td></tr>
+            <tr><td>Broadcast overlay</td><td class="mono">http://127.0.0.1:4173/overlay.html</td><td>OBS Browser Source</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note warn">
+        <strong>Port already in use</strong>
+        <p>If the black window says port 4173 is busy, an old scoreboard window is still open. Close every other terminal running the project, then start again.</p>
+      </div>
+    </section>
+
+    <section id="obs">
+      <h2><span class="n">3</span>Set up OBS Studio</h2>
+      <p class="lede">Do this once; OBS remembers it. Menu names are from OBS Studio 30 and 31 on Windows.</p>
+
+      <h3>Canvas size</h3>
+      <p class="path"><span>File</span> → <span>Settings</span> → <span>Video</span></p>
+      <div class="props">
+        <div class="props-head"><span>Video</span><span>Settings</span></div>
+        <dl>
+          <dt>Base (Canvas) Resolution</dt><dd class="num">1920x1080</dd>
+          <dt>Output (Scaled) Resolution</dt><dd class="num">1920x1080<small>Use 1280x720 only if the upload speed is under 5 Mbps.</small></dd>
+          <dt>Common FPS Values</dt><dd class="num">30</dd>
+        </dl>
+      </div>
+
+      <h3>Scenes</h3>
+      <p>Create two scenes in the <strong>Scenes</strong> dock (the <kbd>+</kbd> button):</p>
+      <div class="table">
+        <table>
+          <thead><tr><th>Scene</th><th>Sources, top to bottom</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Match Live</strong></td><td>Scoreboard Overlay · Camera · Mic</td><td>The whole event</td></tr>
+            <tr><td><strong>Score Panel</strong> <span class="si">(Setup B only)</span></td><td>Score Control</td><td>Never shown on stream</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>You do not need a separate interval or result scene. Switching the status in the control panel changes what the overlay shows — the INTERVAL and FINISHED screens cover the camera full-screen by themselves.</p>
+
+      <h3>Add the camera</h3>
+      <ol class="steps">
+        <li><div><p>In <strong>Match Live</strong>, click <kbd>+</kbd> under Sources → <strong>Video Capture Device</strong> → name it <em>Camera</em>.</p></div></li>
+        <li><div><p>Pick the camera or capture card, set Resolution/FPS Type to <em>Custom</em> and <span class="num">1920x1080</span>. Click OK.</p></div></li>
+        <li><div><p>Right-click Camera → <span class="path"><span>Transform</span> → <span>Fit to screen</span></span>.</p></div></li>
+      </ol>
+
+      <h3>Add the scoreboard overlay</h3>
+      <ol class="steps">
+        <li><div><p>Click <kbd>+</kbd> under Sources → <strong>Browser</strong> → name it <em>Scoreboard Overlay</em>. Fill in the properties exactly as below.</p></div></li>
+      </ol>
+      <div class="props">
+        <div class="props-head"><span>Properties for “Scoreboard Overlay”</span><span>Browser</span></div>
+        <dl>
+          <dt>URL</dt><dd class="mono">http://127.0.0.1:4173/overlay.html<small>Setup B: https://your-project.vercel.app/overlay.html</small></dd>
+          <dt>Width</dt><dd class="num">1920</dd>
+          <dt>Height</dt><dd class="num">1080</dd>
+          <dt>Use custom frame rate</dt><dd><span class="box"></span>Off</dd>
+          <dt>Control audio via OBS</dt><dd><span class="box on"></span>On<small>Interval music and logo videos then appear in the Audio Mixer.</small></dd>
+          <dt>Custom CSS</dt><dd class="mono">body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }<small>Leave the OBS default.</small></dd>
+          <dt>Shutdown source when not visible</dt><dd><span class="box"></span>Off</dd>
+          <dt>Refresh browser when scene becomes active</dt><dd><span class="box"></span>Off</dd>
+        </dl>
+      </div>
+      <ol class="steps" start="2" style="counter-reset: step 1">
+        <li><div><p>Click OK, then right-click the source → <span class="path"><span>Transform</span> → <span>Fit to screen</span></span>.</p></div></li>
+        <li><div><p>Make sure <strong>Scoreboard Overlay is above Camera</strong> in the Sources list. Drag it up if not.</p></div></li>
+      </ol>
+
+      <div class="stack" aria-label="Source order in the Match Live scene">
+        <div class="layer top"><b>Top</b><span><strong>Scoreboard Overlay</strong> — transparent except the score strip and the event badge</span></div>
+        <div class="layer"><b>Middle</b><span><strong>Camera</strong> — the players on the ground</span></div>
+        <div class="layer"><b>Audio</b><span><strong>Mic / Audio Input Capture</strong> — commentary</span></div>
+      </div>
+
+      <div class="note tip">
+        <strong>Transparent in OBS, dark in a browser</strong>
+        <p>The overlay stays see-through only inside OBS. Open in Chrome it shows a dark background so you can check it. To force transparency anywhere, add <code>?transparent=1</code> to the URL.</p>
+      </div>
+
+      <h3>Audio</h3>
+      <ol class="steps">
+        <li><div><p>Add a mic: <kbd>+</kbd> → <strong>Audio Input Capture</strong> → pick the microphone.</p></div></li>
+        <li><div><p>In the <strong>Audio Mixer</strong>, set <em>Scoreboard Overlay</em> around −12 dB so interval music sits under the commentary.</p></div></li>
+        <li><div><p>To hear the music yourself: click the mixer's <kbd>⋮</kbd> → <strong>Advanced Audio Properties</strong> → set Scoreboard Overlay to <em>Monitor and Output</em>.</p></div></li>
+      </ol>
+    </section>
+
+    <section id="operate">
+      <h2><span class="n">4</span>Run the match</h2>
+      <p class="lede">The whole match is run from the control panel. What OBS shows follows the status buttons in the header.</p>
+
+      <div class="flow">
+        <div class="st" style="--c: var(--accent)"><b>READY</b>Waiting screen with both universities and “Starting soon”.</div>
+        <div class="st" style="--c: var(--green)"><b>LIVE</b>Camera with the score strip at the bottom.</div>
+        <div class="st" style="--c: var(--gold)"><b>INTERVAL</b>Full-screen loop: logo animation, break image or video, with music.</div>
+        <div class="st" style="--c: var(--ink-soft)"><b>FINISHED</b>Result screen with runs, balls, outs and the winner.</div>
+      </div>
+
+      <h3>One match, start to finish</h3>
+      <ol class="steps">
+        <li><div><p><strong>Select teams.</strong> Click <em>Team A</em>, pick a university from the list or search; do the same for Team B. The same university cannot be picked twice.</p></div></li>
+        <li><div><p><strong>Choose the batting team.</strong> Tap its card in <em>Live Score Control</em>. The green <em>BATTING</em> tag moves on the overlay.</p></div></li>
+        <li><div><p><strong>Press LIVE</strong> in the header when play begins.</p></div></li>
+        <li><div><p><strong>Score</strong> with the buttons or the keyboard (below). Every change reaches OBS immediately.</p></div></li>
+        <li><div><p><strong>End Current Turn</strong> when the side is done. Confirm; that team's score locks and batting switches to the other team.</p></div></li>
+        <li><div><p><strong>Break?</strong> Pick a screen in <em>Interval / Break Media</em> and press <strong>Play Loop</strong>. Press <strong>Stop → Live</strong> to return.</p></div></li>
+        <li><div><p><strong>Finish Match</strong> shows the result. Winner rule: <em>Auto</em> (most runs) or pick the winner by hand.</p></div></li>
+        <li><div><p><strong>New Match</strong> saves this match to the Match Log, clears the scores and sets READY for the next pair of teams.</p></div></li>
+      </ol>
+
+      <h3>Keyboard shortcuts</h3>
+      <div class="table">
+        <table>
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> <kbd>5</kbd></td><td>Add that many runs (ලකුණු) to the batting team</td></tr>
+            <tr><td><kbd>B</kbd></td><td>+1 ball (පන්දු)</td></tr>
+            <tr><td><kbd>O</kbd></td><td>+1 out (දැවීම්)</td></tr>
+            <tr><td><kbd>U</kbd></td><td>Undo the last action</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="si">Shortcuts pause while a dialog is open or you are typing in a box. Reset Match asks you to type RESET.</p>
+
+      <h3>Interval videos and music</h3>
+      <ul>
+        <li><strong>Your own logo video:</strong> press <em>Upload</em> and choose an MP4 named <code>susl-logo.mp4</code>, <code>belihuloya-logo.mp4</code> or <code>sponsors.mp4</code>. It replaces that built-in animation and loops. Any other MP4 name appears as its own item in the list.</li>
+        <li><strong>Music:</strong> <em>Music On</em> loops <code>Driving.wav</code> during INTERVAL. Uploaded videos play their own sound instead.</li>
+        <li><strong>Music plays from:</strong> keep <em>OBS overlay</em> for the stream. Choose <em>This laptop</em> only when testing without OBS — browsers block sound in a tab you have not clicked.</li>
+      </ul>
+
+      <h3>Where to put the control panel</h3>
+      <p>Best: Chrome on a <strong>second monitor</strong>, full screen with <kbd>F11</kbd>, and OBS on the laptop screen. On one screen, use <kbd>Alt</kbd>+<kbd>Tab</kbd> to switch, and watch the <em>OBS Output Preview</em> on the control panel instead of OBS.</p>
+    </section>
+
+    <section id="facebook">
+      <h2><span class="n">5</span>Go live on Facebook</h2>
+      <p class="lede">Test with a private or “Only me” post the day before.</p>
+
+      <h3>Connect the stream</h3>
+      <ol class="steps">
+        <li><div><p>On Facebook, open the page for the event → <strong>Live video</strong> → <strong>Streaming software</strong>. Copy the <strong>Stream key</strong>.</p></div></li>
+        <li><div><p>In OBS: <span class="path"><span>Settings</span> → <span>Stream</span></span>. Service <em>Facebook Live</em>, then <em>Connect Account</em> or paste the stream key.</p></div></li>
+      </ol>
+
+      <h3>Output settings</h3>
+      <p class="path"><span>Settings</span> → <span>Output</span> → Output Mode <span>Advanced</span> → <span>Streaming</span></p>
+      <div class="props">
+        <div class="props-head"><span>Streaming</span><span>Output</span></div>
+        <dl>
+          <dt>Video Encoder</dt><dd>NVIDIA NVENC H.264<small>Choose x264 if the laptop has no NVIDIA graphics.</small></dd>
+          <dt>Rate Control</dt><dd>CBR</dd>
+          <dt>Bitrate</dt><dd class="num">4500 Kbps<small>Needs about 7 Mbps upload. On weaker internet use 720p at 3000 Kbps.</small></dd>
+          <dt>Keyframe Interval</dt><dd class="num">2 s</dd>
+          <dt>Audio Bitrate</dt><dd class="num">160 kbps · 48 kHz</dd>
+        </dl>
+      </div>
+      <ol class="steps">
+        <li><div><p>Press <strong>Start Streaming</strong> in OBS, wait for the preview on Facebook, then press <strong>Go live</strong> there.</p></div></li>
+        <li><div><p>Watch the OBS status bar: dropped frames above 1% means lower the bitrate.</p></div></li>
+      </ol>
+    </section>
+
+    <section id="vercel">
+      <h2><span class="n">6</span>Host on Vercel</h2>
+      <p class="lede">Setup B. The project already contains <code>vercel.json</code>, so Vercel builds it with no extra settings.</p>
+
+      <h3>Deploy from GitHub</h3>
+      <ol class="steps">
+        <li><div><p>Push the latest code to <a href="https://github.com/Sahancoder/Belihuloya-xvi">github.com/Sahancoder/Belihuloya-xvi</a>.</p></div></li>
+        <li><div><p>Sign in at <a href="https://vercel.com">vercel.com</a> with GitHub → <strong>Add New… → Project</strong> → import <em>Belihuloya-xvi</em>.</p></div></li>
+        <li><div><p>Framework Preset shows <em>Vite</em>; Build Command <code>npm run build</code>; Output Directory <code>dist</code>. Click <strong>Deploy</strong>.</p></div></li>
+        <li><div><p>You get a link such as <code>https://belihuloya-xvi.vercel.app</code>. Every later push to GitHub redeploys it.</p></div></li>
+      </ol>
+
+      <h3>Or deploy from the laptop</h3>
+<pre><span class="c"># in the project folder</span>
+npx vercel login
+npx vercel          <span class="c"># preview link</span>
+npx vercel --prod   <span class="c"># main link</span></pre>
+
+      <h3>Connect OBS to the hosted pages</h3>
+      <div class="note stop">
+        <strong>Important</strong>
+        <p>Do <em>not</em> run the control panel in Chrome with Setup B. OBS will not see the changes. Both pages have to live inside OBS.</p>
+      </div>
+      <ol class="steps">
+        <li><div><p>Scoreboard Overlay source: set URL to <code>https://your-project.vercel.app/overlay.html</code>, with the same properties as in step 3.</p></div></li>
+        <li><div><p>Control panel as a dock: <span class="path"><span>Docks</span> → <span>Custom Browser Docks…</span></span> → name <em>Score Control</em>, URL <code>https://your-project.vercel.app/control.html</code> → Apply.</p></div></li>
+        <li><div><p>Drag the dock's title bar out of the OBS window to float it, then resize it to fill the second monitor.</p></div></li>
+        <li><div><p><strong>Test before every event:</strong> press <kbd>+1</kbd> in the dock. The overlay in the OBS preview must change within a second.</p></div></li>
+      </ol>
+
+      <h3>If the dock test fails</h3>
+      <p>Some OBS versions keep docks in a separate browser storage from sources. Use the <strong>Score Panel</strong> scene instead, which is guaranteed to share with the overlay:</p>
+      <ol class="steps">
+        <li><div><p>In the <em>Score Panel</em> scene add a Browser source named <em>Score Control</em>: URL <code>…/control.html</code>, Width <span class="num">1920</span>, Height <span class="num">1080</span>.</p></div></li>
+        <li><div><p>Right-click it → <strong>Interact</strong>. Maximise the Interact window and operate the match there. Stay on the <em>Match Live</em> scene for the stream.</p></div></li>
+      </ol>
+
+      <h3>Videos on Vercel</h3>
+      <p>Put MP4 files in <code>public/media/</code> — for example <code>public/media/susl-logo.mp4</code> — then commit and push. They appear in the Interval list automatically. Keep each video under about 50 MB.</p>
+
+      <div class="note tip">
+        <strong>Is a public link safe?</strong>
+        <p>Yes. Anyone can open the link, but the score lives in the browser that opened it. A visitor pressing buttons changes only their own copy, never the OBS on your laptop.</p>
+      </div>
+    </section>
+
+    <section id="checklist">
+      <h2><span class="n">7</span>Match-day checklist</h2>
+      <p class="lede">Tick as you go. Ticks stay only until this page is reloaded.</p>
+
+      <div class="phase">The day before</div>
+      <ul class="check">
+        <li><label for="c1"><input type="checkbox" id="c1" /><span>Streaming laptop charged, power adapter packed, Windows updates finished</span></label></li>
+        <li><label for="c2"><input type="checkbox" id="c2" /><span><code>start-scoreboard.bat</code> runs and the control panel opens</span></label></li>
+        <li><label for="c3"><input type="checkbox" id="c3" /><span>Logo MP4 uploaded (or in <code>public/media</code>) and plays in Preview</span></label></li>
+        <li><label for="c4"><input type="checkbox" id="c4" /><span>Private Facebook test stream ran for 10 minutes with no dropped frames</span></label></li>
+      </ul>
+
+      <div class="phase">One hour before</div>
+      <ul class="check">
+        <li><label for="c5"><input type="checkbox" id="c5" /><span>Camera, mic and internet connected; upload speed checked</span></label></li>
+        <li><label for="c6"><input type="checkbox" id="c6" /><span>Scoreboard started; header shows <strong>OBS Sync Online</strong></span></label></li>
+        <li><label for="c7"><input type="checkbox" id="c7" /><span>OBS open on the <em>Match Live</em> scene; overlay sits above the camera</span></label></li>
+        <li><label for="c8"><input type="checkbox" id="c8" /><span>Press <kbd>1</kbd> then <kbd>U</kbd> — OBS shows the run, then removes it</span></label></li>
+        <li><label for="c9"><input type="checkbox" id="c9" /><span>Play Loop once — music is heard in the OBS Audio Mixer</span></label></li>
+      </ul>
+
+      <div class="phase">Each match</div>
+      <ul class="check">
+        <li><label for="c10"><input type="checkbox" id="c10" /><span>New Match pressed, both teams selected, batting team chosen</span></label></li>
+        <li><label for="c11"><input type="checkbox" id="c11" /><span>Status READY until the umpire starts, then LIVE</span></label></li>
+        <li><label for="c12"><input type="checkbox" id="c12" /><span>End Current Turn after each side, Finish Match at the end</span></label></li>
+      </ul>
+    </section>
+
+    <section id="fix">
+      <h2><span class="n">8</span>Troubleshooting</h2>
+      <div class="table">
+        <table>
+          <thead><tr><th>What you see</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td>“This site can't be reached” on 127.0.0.1</td><td>The scoreboard isn't running. Double-click <code>start-scoreboard.bat</code> and keep its window open. Use port <span class="num">4173</span>.</td></tr>
+            <tr><td>Header shows yellow <em>Local Tab Sync</em></td><td>Setup A: the server window was closed — restart it. Setup B: this is normal; keep the control panel inside OBS.</td></tr>
+            <tr><td>Score changes in the panel but not in OBS</td><td>Check both use the same address (both <code>127.0.0.1:4173</code>, or both the Vercel link). Right-click the overlay source → <strong>Refresh</strong>.</td></tr>
+            <tr><td>Overlay is black and hides the camera</td><td>Status is READY, INTERVAL or FINISHED, which cover the screen on purpose. Press LIVE.</td></tr>
+            <tr><td>No interval music</td><td>Music On in the panel; <em>Music plays from</em> set to OBS overlay; “Control audio via OBS” ticked; source not muted in the Audio Mixer.</td></tr>
+            <tr><td>Red error box about <code>bg-ops-panel</code> or CSS</td><td>An old development server is still running. Close all terminals and start again.</td></tr>
+            <tr><td>A university shows letters instead of a crest</td><td>Its logo file is missing from <code>public/universities</code>. Add it with the name listed in <code>src/data/universities.ts</code>.</td></tr>
+            <tr><td>Upload button greyed out</td><td>Setup B has no uploads. Put the file in <code>public/media</code> and redeploy.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Belihuloya XVI Sabra Elle Championship · Sabaragamuwa University of Sri Lanka, Belihuloya · Play · Unite · Rise
+    </footer>
+  </main>
+</div>

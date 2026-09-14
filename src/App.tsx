@@ -1,27 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { AdminPage } from './pages/AdminPage';
+import React from 'react';
+import { ControlPage } from './pages/ControlPage';
 import { OverlayPage } from './pages/OverlayPage';
 
-export const App: React.FC = () => {
-  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Determine route: /overlay or /admin
-  const isOverlay = currentPath.includes('/overlay');
-
-  if (isOverlay) {
-    return <OverlayPage />;
-  }
-
-  return <AdminPage />;
+const isOverlay = () => {
+  const page = document.getElementById('root')?.dataset.page;
+  return page === 'overlay' || (!page && window.location.pathname.includes('overlay'));
 };
+
+export const App: React.FC = () => (isOverlay() ? <OverlayPage /> : <ControlPage />);
 
 export default App;

@@ -1,145 +1,131 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useMatchStore } from '../matchStore';
 import { UNIVERSITIES } from '../../data/universities';
-import { loadFromLocalStorage } from '../../services/persistence';
+import { STORAGE_KEY, getInitialMatchState, loadArchive, loadFromLocalStorage } from '../../services/persistence';
+import { getMatchResult } from '../../services/result';
 
-describe('Match Store Unit Tests', () => {
+const s = () => useMatchStore.getState();
+const batting = () => s().scores[s().battingTeam];
+
+describe('match store', () => {
   beforeEach(() => {
     localStorage.clear();
-    useMatchStore.getState().resetMatch();
+    useMatchStore.setState({ ...getInitialMatchState(), updatedAt: 0 });
   });
 
-  it('adds +1 run correctly', () => {
-    useMatchStore.getState().addRuns(1);
-    expect(useMatchStore.getState().score.runs).toBe(1);
+  it('adds runs, balls and outs to the batting team', () => {
+    s().addRuns(4);
+    s().addRuns(1);
+    s().addBall();
+    s().addOut();
+    expect(batting()).toEqual({ runs: 5, balls: 1, outs: 1 });
   });
 
-  it('adds +4 runs correctly', () => {
-    useMatchStore.getState().addRuns(4);
-    expect(useMatchStore.getState().score.runs).toBe(4);
+  it('never goes below zero', () => {
+    s().removeRun();
+    s().removeBall();
+    s().removeOut();
+    expect(batting()).toEqual({ runs: 0, balls: 0, outs: 0 });
+    expect(s().history).toHaveLength(0);
   });
 
-  it('subtracts -1 run correctly', () => {
-    useMatchStore.getState().addRuns(3);
-    useMatchStore.getState().decrementRuns();
-    expect(useMatchStore.getState().score.runs).toBe(2);
+  it('keeps team scores separate when switching batting team', () => {
+    s().addRuns(8);
+    s().switchBattingTeam();
+    expect(s().battingTeam).toBe('teamB');
+    expect(batting().runs).toBe(0);
+    s().addRuns(6);
+    s().switchBattingTeam();
+    expect(batting().runs).toBe(8);
+    expect(s().scores.teamB.runs).toBe(6);
   });
 
-  it('prevents runs from becoming negative', () => {
-    useMatchStore.getState().decrementRuns();
-    expect(useMatchStore.getState().score.runs).toBe(0);
-    useMatchStore.getState().decrementRuns();
-    expect(useMatchStore.getState().score.runs).toBe(0);
+  it('prevents the same university on both sides', () => {
+    expect(s().setTeam('teamB', s().teamA)).toBe(false);
+    expect(s().setTeam('teamB', UNIVERSITIES[2])).toBe(true);
+    expect(s().teamB.code).toBe(UNIVERSITIES[2].code);
   });
 
-  it('adds +1 ball correctly', () => {
-    useMatchStore.getState().addBall();
-    expect(useMatchStore.getState().score.balls).toBe(1);
+  it('undoes actions in order', () => {
+    s().addRuns(2);
+    s().addOut();
+    s().undoLastAction();
+    expect(batting()).toEqual({ runs: 2, balls: 0, outs: 0 });
+    s().undoLastAction();
+    expect(batting().runs).toBe(0);
   });
 
-  it('prevents balls from becoming negative', () => {
-    useMatchStore.getState().decrementBall();
-    expect(useMatchStore.getState().score.balls).toBe(0);
+  it('end turn locks the team and switches to the other side', () => {
+    s().addRuns(8);
+    s().endTurn();
+    expect(s().turnDone.teamA).toBe(true);
+    expect(s().battingTeam).toBe('teamB');
+
+    s().setBattingTeam('teamA');
+    s().addRuns(5);
+    expect(s().scores.teamA.runs).toBe(8);
+
+    s().undoLastAction(); // batting switch
+    s().undoLastAction(); // end turn
+    expect(s().turnDone.teamA).toBe(false);
+    expect(s().battingTeam).toBe('teamA');
   });
 
-  it('adds +1 out correctly', () => {
-    useMatchStore.getState().addOut();
-    expect(useMatchStore.getState().score.outs).toBe(1);
+  it('swap moves scores with teams', () => {
+    const a = s().teamA.code;
+    s().addRuns(3);
+    s().swapTeams();
+    expect(s().teamB.code).toBe(a);
+    expect(s().scores.teamB.runs).toBe(3);
+    expect(s()[s().battingTeam].code).toBe(a);
   });
 
-  it('prevents outs from becoming negative', () => {
-    useMatchStore.getState().decrementOut();
-    expect(useMatchStore.getState().score.outs).toBe(0);
+  it('manual override sets exact values', () => {
+    s().manualOverride('teamB', { runs: 8, balls: 14, outs: 2 });
+    expect(s().scores.teamB).toEqual({ runs: 8, balls: 14, outs: 2 });
   });
 
-  it('supports Undo for single action', () => {
-    useMatchStore.getState().addRuns(4);
-    expect(useMatchStore.getState().score.runs).toBe(4);
-
-    useMatchStore.getState().undoLastAction();
-    expect(useMatchStore.getState().score.runs).toBe(0);
+  it('reset clears scores, locks and history', () => {
+    s().addRuns(5);
+    s().endTurn();
+    s().setStatus('LIVE');
+    s().resetMatch();
+    expect(s().scores.teamA.runs).toBe(0);
+    expect(s().turnDone.teamA).toBe(false);
+    expect(s().status).toBe('READY');
+    expect(s().history).toHaveLength(0);
   });
 
-  it('supports multiple sequential Undos restoring exact previous states', () => {
-    useMatchStore.getState().addRuns(1); // 1
-    useMatchStore.getState().addBall();   // 1 ball
-    useMatchStore.getState().addRuns(4); // 5 runs
-    useMatchStore.getState().addOut();   // 1 out
+  it('new match archives the previous match and starts READY', () => {
+    s().addRuns(8);
+    s().switchBattingTeam();
+    s().addRuns(6);
+    s().setStatus('FINISHED');
+    s().newMatch();
 
-    expect(useMatchStore.getState().score.runs).toBe(5);
-    expect(useMatchStore.getState().score.balls).toBe(1);
-    expect(useMatchStore.getState().score.outs).toBe(1);
-
-    // Undo 1: Revert Out
-    useMatchStore.getState().undoLastAction();
-    expect(useMatchStore.getState().score.outs).toBe(0);
-    expect(useMatchStore.getState().score.runs).toBe(5);
-
-    // Undo 2: Revert +4 Runs
-    useMatchStore.getState().undoLastAction();
-    expect(useMatchStore.getState().score.runs).toBe(1);
-
-    // Undo 3: Revert +1 Ball
-    useMatchStore.getState().undoLastAction();
-    expect(useMatchStore.getState().score.balls).toBe(0);
-
-    // Undo 4: Revert +1 Run
-    useMatchStore.getState().undoLastAction();
-    expect(useMatchStore.getState().score.runs).toBe(0);
+    expect(s().status).toBe('READY');
+    expect(s().matchNumber).toBe(2);
+    expect(s().scores.teamA.runs + s().scores.teamB.runs).toBe(0);
+    const [saved] = loadArchive();
+    expect(saved.scores.teamA.runs).toBe(8);
+    expect(saved.result).toBe(`${s().teamA.code} WIN`);
   });
 
-  it('switches batting team and tracks separate team scores', () => {
-    useMatchStore.getState().setBattingTeam('teamA');
-    useMatchStore.getState().addRuns(8);
-    expect(useMatchStore.getState().teamAScore.runs).toBe(8);
-
-    useMatchStore.getState().switchBattingTeam();
-    expect(useMatchStore.getState().battingTeam).toBe('teamB');
-    expect(useMatchStore.getState().score.runs).toBe(0);
-
-    useMatchStore.getState().addRuns(12);
-    expect(useMatchStore.getState().teamBScore.runs).toBe(12);
-    expect(useMatchStore.getState().teamAScore.runs).toBe(8);
+  it('decides the winner automatically or manually', () => {
+    s().addRuns(3);
+    expect(getMatchResult(s()).winner).toBe('teamA');
+    s().setWinnerRule('TIE');
+    expect(getMatchResult(s()).headline).toBe('MATCH TIED');
   });
 
-  it('ends innings, preserves previous scores and switches batting to INTERVAL', () => {
-    useMatchStore.getState().addRuns(15);
-    useMatchStore.getState().addBall();
-    useMatchStore.getState().endInnings();
-
-    const state = useMatchStore.getState();
-    expect(state.status).toBe('INTERVAL');
-    expect(state.innings).toBe(2);
-    expect(state.battingTeam).toBe('teamB');
-  });
-
-  it('resets score safely', () => {
-    useMatchStore.getState().addRuns(10);
-    useMatchStore.getState().addBall();
-    useMatchStore.getState().resetScore();
-
-    expect(useMatchStore.getState().score.runs).toBe(0);
-    expect(useMatchStore.getState().score.balls).toBe(0);
-    expect(useMatchStore.getState().score.outs).toBe(0);
-  });
-
-  it('recovers safely from invalid or corrupted localStorage data', () => {
-    localStorage.setItem('belihuloya_match_state', 'corrupted_json{!!');
-    const recovered = loadFromLocalStorage();
-
-    expect(recovered.teamA.code).toBe('SUSL');
-    expect(recovered.score.runs).toBe(0);
-    expect(recovered.score.balls).toBe(0);
-    expect(recovered.score.outs).toBe(0);
-  });
-
-  it('persists and restores state from localStorage properly', () => {
-    useMatchStore.getState().setTeams(UNIVERSITIES[2], UNIVERSITIES[5]);
-    useMatchStore.getState().addRuns(7);
-
+  it('persists to localStorage and recovers from corrupted data', () => {
+    s().setTeam('teamA', UNIVERSITIES[4]);
+    s().addRuns(7);
     const loaded = loadFromLocalStorage();
-    expect(loaded.teamA.code).toBe(UNIVERSITIES[2].code);
-    expect(loaded.teamB.code).toBe(UNIVERSITIES[5].code);
-    expect(loaded.score.runs).toBe(7);
+    expect(loaded.teamA.code).toBe(UNIVERSITIES[4].code);
+    expect(loaded.scores.teamA.runs).toBe(7);
+
+    localStorage.setItem(STORAGE_KEY, 'corrupted{');
+    expect(loadFromLocalStorage().scores.teamA.runs).toBe(0);
   });
 });
