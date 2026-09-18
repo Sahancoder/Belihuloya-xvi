@@ -9,6 +9,8 @@ export const EVENT = {
   logo: '/tournament/belihuloya-xvi-logo-light.png',
   breakImage: '/breakimage/break.png',
   intervalMusic: encodeURI('/music loop/Driving.wav'),
+  /** Sponsor logo paths (e.g. '/sponsors/acme.png') shown in the NORMAL LIVE footer. Empty = no sponsor strip. */
+  sponsors: [] as string[],
 };
 
 export type MediaKind = 'animation' | 'image' | 'video';

@@ -140,6 +140,15 @@ export const UNIVERSITIES: University[] = [
     primaryColor: '#831843',
     secondaryColor: '#FCD34D',
   },
+  {
+    id: 'sabra-legends',
+    code: 'SLEG',
+    name: 'Sabra Legends',
+    shortName: 'Sabra Legends',
+    logoPath: '/universities/sabra legends .png',
+    primaryColor: '#800000',
+    secondaryColor: '#FFD700',
+  },
 ];
 
 export const HOST_UNIVERSITY = UNIVERSITIES[0];

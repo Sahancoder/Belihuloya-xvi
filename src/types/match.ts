@@ -1,6 +1,9 @@
 import { University } from './university';
 
-export type MatchStatus = 'READY' | 'LIVE' | 'INTERVAL' | 'FINISHED';
+/** NORMAL_LIVE = camera only with a branding footer, for ceremonies, speeches and awards (no match data). */
+export type MatchStatus = 'READY' | 'LIVE' | 'NORMAL_LIVE' | 'INTERVAL' | 'FINISHED';
+
+export const statusLabel = (status: MatchStatus): string => status.replace('_', ' ');
 
 export type TeamSide = 'teamA' | 'teamB';
 

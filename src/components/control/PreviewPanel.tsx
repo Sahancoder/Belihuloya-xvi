@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Copy, ExternalLink, Eye, MonitorPlay } from 'lucide-react';
-import { IntervalSelection, MatchSnapshot } from '../../types/match';
+import { IntervalSelection, MatchSnapshot, statusLabel } from '../../types/match';
 import { useMatchStore } from '../../store/matchStore';
 import { ScaledStage } from '../common/ScaledStage';
 import { OverlayStage } from '../overlay/OverlayStage';
@@ -13,6 +13,7 @@ interface PreviewPanelProps {
 const STATUS_BADGE: Record<MatchSnapshot['status'], string> = {
   READY: 'bg-ops-cyan/15 text-ops-cyan',
   LIVE: 'bg-ops-green/15 text-ops-green',
+  NORMAL_LIVE: 'bg-ops-red/15 text-ops-red',
   INTERVAL: 'bg-ops-gold/15 text-ops-gold',
   FINISHED: 'bg-white/10 text-white',
 };
@@ -48,7 +49,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewMedia, onExit
         ) : (
           <span className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold tracking-wider ${STATUS_BADGE[store.status]}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-current" />
-            ON AIR · {store.status}
+            ON AIR · {statusLabel(store.status)}
           </span>
         )}
       </div>

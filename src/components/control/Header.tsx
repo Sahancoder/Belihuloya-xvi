@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { MapPin, Radio, Tv } from 'lucide-react';
-import { MatchStatus } from '../../types/match';
+import { MatchStatus, statusLabel } from '../../types/match';
 import { EVENT } from '../../data/event';
 import { SafeImage } from '../common/SafeImage';
 
 const STATUSES: { id: MatchStatus; hint: string; active: string }[] = [
   { id: 'READY', hint: 'Waiting screen', active: 'bg-ops-cyan text-[#03202A] shadow-[0_0_18px_rgba(0,207,232,0.35)]' },
   { id: 'LIVE', hint: 'Scoreboard on camera', active: 'bg-ops-green text-[#032A1C] shadow-[0_0_18px_rgba(16,201,129,0.35)]' },
+  { id: 'NORMAL_LIVE', hint: 'Camera + footer only (ceremony, speeches, awards)', active: 'bg-ops-red text-white shadow-[0_0_18px_rgba(227,38,54,0.4)]' },
   { id: 'INTERVAL', hint: 'Loop media', active: 'bg-ops-gold text-[#2A1E03] shadow-[0_0_18px_rgba(246,196,69,0.35)]' },
   { id: 'FINISHED', hint: 'Final result', active: 'bg-white text-ops-bg' },
 ];
@@ -73,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ status, matchNumber, serverOnlin
               status === s.id ? s.active : 'text-ops-muted hover:bg-white/5 hover:text-white'
             }`}
           >
-            {s.id}
+            {statusLabel(s.id)}
           </button>
         ))}
       </div>

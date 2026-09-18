@@ -57,7 +57,7 @@ export const sanitizeState = (raw: unknown): MatchState | null => {
 
   const base = getInitialMatchState();
   const side = (v: unknown): TeamSide => (v === 'teamB' ? 'teamB' : 'teamA');
-  const statuses = ['READY', 'LIVE', 'INTERVAL', 'FINISHED'];
+  const statuses = ['READY', 'LIVE', 'NORMAL_LIVE', 'INTERVAL', 'FINISHED'];
   const rules = ['AUTO', 'teamA', 'teamB', 'TIE'];
 
   return {

@@ -8,6 +8,7 @@ import {
   ScoreState,
   TeamSide,
   WinnerRule,
+  statusLabel,
 } from '../types/match';
 import { University } from '../types/university';
 import {
@@ -136,7 +137,7 @@ export const useMatchStore = create<MatchStore>((set, get) => {
     switchBattingTeam: () => get().setBattingTeam(otherSide(get().battingTeam)),
 
     setStatus: (status) =>
-      apply((s) => (s.status === status ? null : { status }), 'STATUS', `Status → ${status}`),
+      apply((s) => (s.status === status ? null : { status }), 'STATUS', `Status → ${statusLabel(status)}`),
 
     addRuns: (amount) => changeScore('runs', amount, 'RUN', `+${amount} Run${amount > 1 ? 's' : ''}`),
     removeRun: () => changeScore('runs', -1, 'RUN', '-1 Run'),
