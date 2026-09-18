@@ -149,6 +149,15 @@ export const UNIVERSITIES: University[] = [
     primaryColor: '#800000',
     secondaryColor: '#FFD700',
   },
+  {
+    id: 'sabra-old-champions',
+    code: 'SOC',
+    name: 'Sabra Old Champions',
+    shortName: 'Sabra Old Champions',
+    logoPath: '/universities/sabra old champtions .png',
+    primaryColor: '#800000',
+    secondaryColor: '#FFD700',
+  },
 ];
 
 export const HOST_UNIVERSITY = UNIVERSITIES[0];
